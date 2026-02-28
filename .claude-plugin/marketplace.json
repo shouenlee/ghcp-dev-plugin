@@ -42,6 +42,18 @@
       "source": "./plugins/security-check",
       "category": "security",
       "tags": ["security", "secrets", "vulnerabilities", "scanning"]
+    },
+    {
+      "name": "make-skill-template",
+      "description": "Create new Agent Skills from prompts or by duplicating this template. Use when asked to create a skill, make a new skill, or scaffold a skill.",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/make-skill-template",
+      "category": "development",
+      "tags": ["skill", "template", "scaffold", "create", "agent-skills"]
     }
   ]
 }
