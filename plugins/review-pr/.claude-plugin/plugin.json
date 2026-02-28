@@ -1,0 +1,8 @@
+{
+  "name": "review-pr",
+  "description": "Reviews GitHub pull requests holistically using gh CLI — analyzes code quality, verifies tests, checks best practices, and posts inline comments",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

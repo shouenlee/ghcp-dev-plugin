@@ -66,6 +66,18 @@
       "source": "./plugins/commit-changes",
       "category": "git",
       "tags": ["commit", "git", "diff", "auto-commit", "split-commits", "workflow"]
+    },
+    {
+      "name": "review-pr",
+      "description": "Reviews GitHub pull requests using the gh CLI — analyzes code quality, verifies tests, checks best practices, and posts inline review comments",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/review-pr",
+      "category": "code-quality",
+      "tags": ["review", "pull-request", "pr", "github", "testing", "code-quality", "gh"]
     }
   ]
 }
