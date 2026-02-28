@@ -1,18 +1,8 @@
 {
   "name": "security-check",
-  "version": "1.0.0",
   "description": "Scans code for hardcoded secrets, injection risks, and common vulnerabilities",
-  "components": {
-    "skills": [
-      {
-        "name": "security",
-        "path": "skills/security/SKILL.md"
-      }
-    ],
-    "hooks": [
-      {
-        "path": "hooks.json"
-      }
-    ]
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
   }
 }

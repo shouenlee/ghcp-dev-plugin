@@ -1,13 +1,8 @@
 {
   "name": "make-skill-template",
-  "version": "1.0.0",
-  "description": "Create new Agent Skills for GitHub Copilot from prompts or by duplicating this template. Use when asked to create a skill, make a new skill, or scaffold a skill.",
-  "components": {
-    "skills": [
-      {
-        "name": "make-skill-template",
-        "path": "skills/make-skill-template/SKILL.md"
-      }
-    ]
+  "description": "Create new Agent Skills from prompts or by duplicating this template. Use when asked to create a skill, make a new skill, or scaffold a skill.",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
   }
 }
