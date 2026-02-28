@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^gh pr (checkout|view|diff)",
+      "action": "suggest",
+      "message": "Tip: Use /review-pr to perform a full code review of this pull request."
+    }
+  ]
+}
