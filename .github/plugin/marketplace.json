@@ -54,6 +54,18 @@
       "source": "./plugins/make-skill-template",
       "category": "development",
       "tags": ["skill", "template", "scaffold", "create", "agent-skills"]
+    },
+    {
+      "name": "commit-changes",
+      "description": "Intelligently reviews git diffs and creates well-structured commits, automatically splitting changes into multiple logical commits when needed",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/commit-changes",
+      "category": "git",
+      "tags": ["commit", "git", "diff", "auto-commit", "split-commits", "workflow"]
     }
   ]
 }
