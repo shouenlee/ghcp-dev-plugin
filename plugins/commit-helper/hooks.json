@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "before_command",
+      "pattern": "^git commit(?!.*-m).*$",
+      "action": "suggest",
+      "message": "Tip: Use /commit to generate a conventional commit message from your staged changes."
+    }
+  ]
+}

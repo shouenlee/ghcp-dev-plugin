@@ -1,0 +1,19 @@
+{
+  "name": "code-review",
+  "version": "1.0.0",
+  "description": "Analyzes code for bugs, security issues, performance problems, and readability improvements",
+  "components": {
+    "skills": [
+      {
+        "name": "review",
+        "path": "skills/review/SKILL.md"
+      }
+    ],
+    "agents": [
+      {
+        "name": "reviewer",
+        "path": "agents/reviewer.agent.md"
+      }
+    ]
+  }
+}

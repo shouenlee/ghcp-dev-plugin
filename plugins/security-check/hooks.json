@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "\\.(js|ts|py|rb|go|java|php|sh|yaml|yml|json|env)$",
+      "action": "suggest",
+      "message": "Tip: Run /security to scan for hardcoded secrets or vulnerabilities in your changes."
+    }
+  ]
+}

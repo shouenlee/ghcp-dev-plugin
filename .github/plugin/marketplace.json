@@ -1,0 +1,32 @@
+{
+  "name": "ghcp-dev-plugins",
+  "version": "1.0.0",
+  "description": "A cross-platform plugin marketplace for Claude Code and GitHub Copilot CLI",
+  "repository": "shouenlee/ghcp-dev-plugin",
+  "plugins": [
+    {
+      "name": "code-review",
+      "source": "plugins/code-review",
+      "description": "Analyzes code for bugs, security issues, performance problems, and readability improvements",
+      "version": "1.0.0",
+      "category": "code-quality",
+      "tags": ["review", "bugs", "security", "performance", "readability"]
+    },
+    {
+      "name": "commit-helper",
+      "source": "plugins/commit-helper",
+      "description": "Generates conventional commit messages and reminds you to write descriptive commits",
+      "version": "1.0.0",
+      "category": "git",
+      "tags": ["commit", "git", "conventional-commits", "workflow"]
+    },
+    {
+      "name": "security-check",
+      "source": "plugins/security-check",
+      "description": "Scans code for hardcoded secrets, injection risks, and common vulnerabilities",
+      "version": "1.0.0",
+      "category": "security",
+      "tags": ["security", "secrets", "vulnerabilities", "scanning"]
+    }
+  ]
+}
