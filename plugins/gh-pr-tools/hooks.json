@@ -1,0 +1,16 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^gh pr (checkout|view|diff)",
+      "action": "suggest",
+      "message": "Tip: Use /pr-review to perform a full code review, or /pr-status for a quick thread summary."
+    },
+    {
+      "event": "before_command",
+      "pattern": "^gh pr create",
+      "action": "suggest",
+      "message": "Tip: Use /pr-create to create a PR with auto-generated title and description."
+    }
+  ]
+}

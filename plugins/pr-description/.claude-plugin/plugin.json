@@ -1,8 +1,0 @@
-{
-  "name": "pr-description",
-  "description": "Generates structured PR descriptions from branch diffs with summary, grouped changes, testing instructions, and deploy notes",
-  "author": {
-    "name": "shouenlee",
-    "email": "shouenlee@users.noreply.github.com"
-  }
-}
