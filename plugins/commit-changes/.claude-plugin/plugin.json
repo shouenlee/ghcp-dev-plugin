@@ -1,0 +1,8 @@
+{
+  "name": "commit-changes",
+  "description": "Intelligently reviews git diffs and creates well-structured commits, automatically splitting changes into multiple logical commits when needed",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}
