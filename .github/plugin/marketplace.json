@@ -56,16 +56,16 @@
       "tags": ["commit", "git", "diff", "auto-commit", "split-commits", "workflow"]
     },
     {
-      "name": "review-pr",
-      "description": "Reviews GitHub pull requests using the gh CLI — analyzes code quality, verifies tests, checks best practices, and posts inline review comments",
+      "name": "gh-pr-tools",
+      "description": "GitHub pull request tools — review PRs, resolve review comments, check thread status, and create PRs using the gh CLI",
       "version": "1.0.0",
       "author": {
         "name": "shouenlee",
         "email": "shouenlee@users.noreply.github.com"
       },
-      "source": "./plugins/review-pr",
-      "category": "code-quality",
-      "tags": ["review", "pull-request", "pr", "github", "testing", "code-quality", "gh"]
+      "source": "./plugins/gh-pr-tools",
+      "category": "git",
+      "tags": ["review", "pull-request", "pr", "github", "comments", "resolve", "gh"]
     },
     {
       "name": "python-lint-fix",
@@ -90,18 +90,6 @@
       "source": "./plugins/test-gen",
       "category": "testing",
       "tags": ["pytest", "testing", "test-generation", "coverage", "unit-tests"]
-    },
-    {
-      "name": "pr-description",
-      "description": "Generates structured PR descriptions from branch diffs with summary, grouped changes, testing instructions, and deploy notes",
-      "version": "1.0.0",
-      "author": {
-        "name": "shouenlee",
-        "email": "shouenlee@users.noreply.github.com"
-      },
-      "source": "./plugins/pr-description",
-      "category": "git",
-      "tags": ["pr", "pull-request", "description", "git", "github", "workflow"]
     },
     {
       "name": "ci-pipeline",

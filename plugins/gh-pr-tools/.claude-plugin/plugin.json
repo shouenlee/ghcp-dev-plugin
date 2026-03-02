@@ -1,0 +1,18 @@
+{
+  "name": "gh-pr-tools",
+  "description": "GitHub pull request tools — review PRs, resolve review comments, check thread status, and create PRs using the gh CLI",
+  "version": "1.0.0",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  },
+  "keywords": [
+    "github",
+    "pull-request",
+    "code-review",
+    "pr-comments",
+    "pr-create",
+    "pr-review",
+    "gh"
+  ]
+}
