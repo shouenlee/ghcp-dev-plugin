@@ -1,8 +1,0 @@
-{
-  "name": "commit-helper",
-  "description": "Generates conventional commit messages and reminds you to write descriptive commits",
-  "author": {
-    "name": "shouenlee",
-    "email": "shouenlee@users.noreply.github.com"
-  }
-}

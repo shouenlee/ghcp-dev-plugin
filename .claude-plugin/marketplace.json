@@ -19,19 +19,7 @@
       "category": "code-quality",
       "tags": ["review", "bugs", "security", "performance", "readability"]
     },
-    {
-      "name": "commit-helper",
-      "description": "Generates conventional commit messages and reminds you to write descriptive commits",
-      "version": "1.0.0",
-      "author": {
-        "name": "shouenlee",
-        "email": "shouenlee@users.noreply.github.com"
-      },
-      "source": "./plugins/commit-helper",
-      "category": "git",
-      "tags": ["commit", "git", "conventional-commits", "workflow"]
-    },
-    {
+{
       "name": "security-check",
       "description": "Scans code for hardcoded secrets, injection risks, and common vulnerabilities",
       "version": "1.0.0",
