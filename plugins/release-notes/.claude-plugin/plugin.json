@@ -1,0 +1,8 @@
+{
+  "name": "release-notes",
+  "description": "Generates changelogs from conventional commits, bumps semantic versions, and creates GitHub releases",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

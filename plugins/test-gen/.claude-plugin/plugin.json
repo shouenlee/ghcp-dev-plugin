@@ -1,0 +1,8 @@
+{
+  "name": "test-gen",
+  "description": "Generates pytest test suites from source files and tracks code coverage to identify under-tested areas",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "scaffold-app",
+  "description": "Generates convention-aware boilerplate for Django and FastAPI patterns including endpoints, models, serializers, schemas, Celery tasks, and test stubs",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

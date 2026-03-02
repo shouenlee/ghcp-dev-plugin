@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "Dockerfile$",
+      "action": "suggest",
+      "message": "Tip: Use /docker optimize to check your Dockerfile for anti-patterns and best practices."
+    }
+  ]
+}

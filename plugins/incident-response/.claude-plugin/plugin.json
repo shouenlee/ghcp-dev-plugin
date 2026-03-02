@@ -1,0 +1,8 @@
+{
+  "name": "incident-response",
+  "description": "Triages production incidents, correlates errors with recent deploys, generates structured postmortems and operational runbooks",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

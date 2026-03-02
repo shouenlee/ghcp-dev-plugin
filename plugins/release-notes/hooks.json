@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^git tag",
+      "action": "suggest",
+      "message": "Tip: Use /release notes to generate a changelog from commits since the last release."
+    }
+  ]
+}

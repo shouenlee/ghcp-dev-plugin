@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "(?<!test_)([a-zA-Z0-9_]+)\\.py$",
+      "action": "suggest",
+      "message": "Tip: Use /test-gen to generate pytest tests for the changes you just made."
+    }
+  ]
+}

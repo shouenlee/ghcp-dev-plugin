@@ -1,0 +1,8 @@
+{
+  "name": "task-breakdown",
+  "description": "Decomposes feature descriptions and GitHub issues into ordered implementation subtasks with file-level scope and acceptance criteria",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

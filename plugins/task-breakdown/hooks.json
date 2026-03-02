@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^gh issue view",
+      "action": "suggest",
+      "message": "Tip: Use /task-breakdown to decompose this issue into implementation subtasks."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "docker-compose",
+  "description": "Generates multi-stage Dockerfiles and docker-compose configurations, adds services like Postgres and Redis, and optimizes images for production",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

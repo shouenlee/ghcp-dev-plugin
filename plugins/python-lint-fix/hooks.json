@@ -1,0 +1,16 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "\\.py$",
+      "action": "suggest",
+      "message": "Tip: Use /lint to check this file for lint violations, type errors, and security issues."
+    },
+    {
+      "event": "before_command",
+      "pattern": "^git commit",
+      "action": "suggest",
+      "message": "Tip: Use /lint to check your Python files before committing."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^git checkout -b",
+      "action": "suggest",
+      "message": "Tip: Use /design-doc to create an RFC or ADR for the feature you're starting."
+    }
+  ]
+}

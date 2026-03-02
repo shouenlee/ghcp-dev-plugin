@@ -1,0 +1,8 @@
+{
+  "name": "api-docs",
+  "description": "Generates markdown API documentation from FastAPI routes and DRF viewsets, and detects drift between code and existing docs",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

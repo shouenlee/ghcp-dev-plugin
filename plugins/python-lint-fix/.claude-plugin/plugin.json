@@ -1,0 +1,8 @@
+{
+  "name": "python-lint-fix",
+  "description": "Runs ruff, mypy, and bandit on Python files to find and auto-fix lint violations, type errors, and security issues",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

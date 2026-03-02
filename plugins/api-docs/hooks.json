@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "(views|routes|endpoints|serializers|schemas).*\\.py$",
+      "action": "suggest",
+      "message": "Tip: Use /api-docs diff to check if your API documentation is still up to date."
+    }
+  ]
+}

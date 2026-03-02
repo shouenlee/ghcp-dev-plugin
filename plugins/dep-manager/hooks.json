@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "(requirements.*\\.txt|pyproject\\.toml)$",
+      "action": "suggest",
+      "message": "Tip: Use /deps audit to check for known vulnerabilities in your dependencies."
+    }
+  ]
+}

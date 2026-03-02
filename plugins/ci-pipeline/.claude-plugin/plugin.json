@@ -1,0 +1,8 @@
+{
+  "name": "ci-pipeline",
+  "description": "Generates GitHub Actions workflows, diagnoses CI failures from run logs, and helps add pipeline steps",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

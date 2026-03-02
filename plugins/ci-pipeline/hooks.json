@@ -1,0 +1,10 @@
+{
+  "hooks": [
+    {
+      "event": "after_edit",
+      "pattern": "\\.github/workflows/.*\\.yml$",
+      "action": "suggest",
+      "message": "Tip: Validate your workflow YAML syntax before pushing. Use /ci diagnose if a run fails."
+    }
+  ]
+}

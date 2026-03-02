@@ -1,0 +1,8 @@
+{
+  "name": "dep-manager",
+  "description": "Manages Python dependencies — add, remove, audit for vulnerabilities, and detect unused packages",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "design-doc",
+  "description": "Generates RFCs and Architecture Decision Records from feature descriptions, maintaining consistent numbering and format",
+  "author": {
+    "name": "shouenlee",
+    "email": "shouenlee@users.noreply.github.com"
+  }
+}
