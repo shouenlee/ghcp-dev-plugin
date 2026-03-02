@@ -1,0 +1,20 @@
+{
+  "name": "deep-wiki",
+  "description": "AI-powered wiki generator for code repositories with Mermaid diagrams, onboarding guides, deep research, and source citations",
+  "version": "2.0.0",
+  "author": {
+    "name": "Govind Kamtamneni, Markus Weickenmeier",
+    "email": "gok@microsoft.com, wmarkus@microsoft.com"
+  },
+  "homepage": "https://github.com/agency-microsoft/.github-private",
+  "repository": "https://github.com/agency-microsoft/.github-private",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "wiki",
+    "mermaid",
+    "onboarding",
+    "research",
+    "vitepress"
+  ]
+}
