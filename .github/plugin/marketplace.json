@@ -19,7 +19,7 @@
       "category": "code-quality",
       "tags": ["review", "bugs", "security", "performance", "readability"]
     },
-{
+    {
       "name": "security-check",
       "description": "Scans code for hardcoded secrets, injection risks, and common vulnerabilities",
       "version": "1.0.0",
@@ -66,6 +66,185 @@
       "source": "./plugins/review-pr",
       "category": "code-quality",
       "tags": ["review", "pull-request", "pr", "github", "testing", "code-quality", "gh"]
+    },
+    {
+      "name": "python-lint-fix",
+      "description": "Runs ruff, mypy, and bandit on Python files to find and auto-fix lint violations, type errors, and security issues",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/python-lint-fix",
+      "category": "code-quality",
+      "tags": ["python", "lint", "ruff", "mypy", "bandit", "type-check", "auto-fix"]
+    },
+    {
+      "name": "test-gen",
+      "description": "Generates pytest test suites from source files and tracks code coverage to identify under-tested areas",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/test-gen",
+      "category": "testing",
+      "tags": ["pytest", "testing", "test-generation", "coverage", "unit-tests"]
+    },
+    {
+      "name": "pr-description",
+      "description": "Generates structured PR descriptions from branch diffs with summary, grouped changes, testing instructions, and deploy notes",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/pr-description",
+      "category": "git",
+      "tags": ["pr", "pull-request", "description", "git", "github", "workflow"]
+    },
+    {
+      "name": "ci-pipeline",
+      "description": "Generates GitHub Actions workflows, diagnoses CI failures from run logs, and helps add pipeline steps",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/ci-pipeline",
+      "category": "workflow",
+      "tags": ["ci", "cd", "github-actions", "pipeline", "workflow", "devops"]
+    },
+    {
+      "name": "release-notes",
+      "description": "Generates changelogs from conventional commits, bumps semantic versions, and creates GitHub releases",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/release-notes",
+      "category": "git",
+      "tags": ["release", "changelog", "semver", "version", "git-tag", "github-release"]
+    },
+    {
+      "name": "scaffold-app",
+      "description": "Generates convention-aware boilerplate for Django and FastAPI patterns including endpoints, models, serializers, schemas, Celery tasks, and test stubs",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/scaffold-app",
+      "category": "development",
+      "tags": ["scaffold", "boilerplate", "django", "fastapi", "python", "code-generation"]
+    },
+    {
+      "name": "docker-compose",
+      "description": "Generates multi-stage Dockerfiles and docker-compose configurations, adds services like Postgres and Redis, and optimizes images for production",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/docker-compose",
+      "category": "development",
+      "tags": ["docker", "compose", "container", "postgres", "redis", "devops"]
+    },
+    {
+      "name": "design-doc",
+      "description": "Generates RFCs and Architecture Decision Records from feature descriptions, maintaining consistent numbering and format",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/design-doc",
+      "category": "docs",
+      "tags": ["rfc", "adr", "architecture", "design", "documentation", "decision-record"]
+    },
+    {
+      "name": "task-breakdown",
+      "description": "Decomposes feature descriptions and GitHub issues into ordered implementation subtasks with file-level scope and acceptance criteria",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/task-breakdown",
+      "category": "workflow",
+      "tags": ["task", "planning", "decomposition", "subtasks", "github-issues", "project-management"]
+    },
+    {
+      "name": "dep-manager",
+      "description": "Manages Python dependencies — add, remove, audit for vulnerabilities, and detect unused packages",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/dep-manager",
+      "category": "development",
+      "tags": ["dependencies", "python", "pip-audit", "security", "packages", "uv"]
+    },
+    {
+      "name": "incident-response",
+      "description": "Triages production incidents, correlates errors with recent deploys, generates structured postmortems and operational runbooks",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/incident-response",
+      "category": "workflow",
+      "tags": ["incident", "triage", "postmortem", "runbook", "oncall", "production"]
+    },
+    {
+      "name": "api-docs",
+      "description": "Generates markdown API documentation from FastAPI routes and DRF viewsets, and detects drift between code and existing docs",
+      "version": "1.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/api-docs",
+      "category": "docs",
+      "tags": ["api", "documentation", "fastapi", "django", "openapi", "swagger"]
+    },
+    {
+      "name": "ralph-wiggum",
+      "source": { "source": "github", "repo": "harrymunro/ralph-wiggum" },
+      "description": "Autonomous coding loops that keep Claude working until real completion criteria are met",
+      "category": "workflow",
+      "tags": ["autonomous", "loop", "ralph", "automation"]
+    },
+    {
+      "name": "context7",
+      "source": { "source": "github", "repo": "upstash/context7" },
+      "description": "Injects real-time, up-to-date library documentation into Claude's context for accurate code generation",
+      "category": "development",
+      "tags": ["documentation", "context", "libraries", "real-time"]
+    },
+    {
+      "name": "playwright-skill",
+      "source": { "source": "github", "repo": "lackeyjb/playwright-skill" },
+      "description": "Browser automation — writes and executes Playwright scripts for end-to-end testing and UI verification",
+      "category": "testing",
+      "tags": ["playwright", "browser", "e2e", "testing", "automation"]
+    },
+    {
+      "name": "sentry-mcp",
+      "source": { "source": "github", "repo": "getsentry/sentry-mcp" },
+      "description": "Error monitoring integration — query Sentry issues, traces, and performance data directly from Claude",
+      "category": "workflow",
+      "tags": ["sentry", "monitoring", "errors", "observability", "mcp"]
+    },
+    {
+      "name": "microsoft-playwright-mcp",
+      "source": { "source": "github", "repo": "microsoft/playwright-mcp" },
+      "description": "Official Microsoft Playwright MCP server for direct browser control, debugging, and test automation",
+      "category": "testing",
+      "tags": ["playwright", "microsoft", "browser", "mcp", "debugging"]
     }
   ]
 }
