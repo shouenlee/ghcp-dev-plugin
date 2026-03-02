@@ -233,6 +233,18 @@
       "description": "Official Microsoft Playwright MCP server for direct browser control, debugging, and test automation",
       "category": "testing",
       "tags": ["playwright", "microsoft", "browser", "mcp", "debugging"]
+    },
+    {
+      "name": "deep-wiki",
+      "description": "AI-powered wiki generator — creates structured documentation with dark-mode Mermaid diagrams, onboarding guides, and VitePress sites from any codebase",
+      "version": "2.0.0",
+      "author": {
+        "name": "shouenlee",
+        "email": "shouenlee@users.noreply.github.com"
+      },
+      "source": "./plugins/deep-wiki",
+      "category": "docs",
+      "tags": ["wiki", "documentation", "mermaid", "onboarding", "vitepress", "research"]
     }
   ]
 }
