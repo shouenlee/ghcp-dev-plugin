@@ -245,6 +245,18 @@
       "source": "./plugins/deep-wiki",
       "category": "docs",
       "tags": ["wiki", "documentation", "mermaid", "onboarding", "vitepress", "research"]
+    },
+    {
+      "name": "deep-review",
+      "description": "Lightweight adversarial code review with three parallel subagents (Advocate, Skeptic, Architect) that analyze independently before synthesis",
+      "version": "1.1.8",
+      "author": {
+        "name": "Alex Babanov, Shivani Grandhi",
+        "email": "alexbaba@microsoft.com, shgrandhi@microsoft.com"
+      },
+      "source": "./plugins/deep-review",
+      "category": "code-quality",
+      "tags": ["review", "adversarial", "subagents", "code-quality"]
     }
   ]
 }
