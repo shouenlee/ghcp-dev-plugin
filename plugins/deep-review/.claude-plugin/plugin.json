@@ -1,0 +1,16 @@
+{
+  "name": "deep-review",
+  "description": "Lightweight adversarial review with three parallel subagents (Advocate, Skeptic, Architect)",
+  "version": "1.1.8",
+  "author": {
+    "name": "Alex Babanov, Shivani Grandhi",
+    "email": "alexbaba@microsoft.com, shgrandhi@microsoft.com"
+  },
+  "keywords": [
+    "review",
+    "adversarial",
+    "subagents",
+    "one-shot",
+    "lightweight"
+  ]
+}
