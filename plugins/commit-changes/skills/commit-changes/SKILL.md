@@ -21,17 +21,25 @@ Review working tree changes, group them by logical concern, and create one or mo
 
 ## Workflow
 
-### Step 1: Gather Context
+### Step 1: Branch Guard (MANDATORY — do this FIRST)
+
+Run `git rev-parse --abbrev-ref HEAD` to check the current branch.
+
+**If the current branch is `master` or `main`, you MUST NOT create any commits on it.** Stop and follow these steps before doing anything else:
+
+1. Continue to Step 2 to analyze changes and determine a branch name.
+2. Generate a descriptive branch name using the format `<type>/<short-description>` (e.g., `feat/add-auth-module`, `fix/login-redirect`).
+3. Run `git checkout -b <branch-name>` to create and switch to the new branch.
+4. Inform the user: "You were on `<branch>`. Created branch `<new-branch>` to protect the main branch."
+
+Only after switching off the protected branch may you proceed to commit.
+
+### Step 2: Gather Context
 
 1. Run `git status` to see all changed, staged, and untracked files.
 2. Run `git diff` to see unstaged changes and `git diff --cached` to see staged changes.
 3. Run `git log --oneline -10` to understand the project's existing commit message style and conventions.
-4. Run `git rev-parse --abbrev-ref HEAD` to check the current branch.
-   - If on `master` or `main`: **do not commit to this branch**. Instead:
-     a. After analyzing changes in Step 2, generate a descriptive branch name using the format `<type>/<short-description>` (e.g., `feat/add-auth-module`, `fix/login-redirect`).
-     b. Run `git checkout -b <branch-name>` before executing any commits.
-     c. Inform the user: "You were on `<branch>`. Created branch `<new-branch>` to protect the main branch."
-5. If there are no changes at all, inform the user and stop.
+4. If there are no changes at all, inform the user and stop.
 
 ### Step 2: Analyze and Group Changes
 

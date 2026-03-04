@@ -1,8 +1,0 @@
-{
-  "name": "security-check",
-  "description": "Scans code for hardcoded secrets, injection risks, and common vulnerabilities",
-  "author": {
-    "name": "shouenlee",
-    "email": "shouenlee@users.noreply.github.com"
-  }
-}
