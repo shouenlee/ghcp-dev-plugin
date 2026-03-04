@@ -26,7 +26,12 @@ Review working tree changes, group them by logical concern, and create one or mo
 1. Run `git status` to see all changed, staged, and untracked files.
 2. Run `git diff` to see unstaged changes and `git diff --cached` to see staged changes.
 3. Run `git log --oneline -10` to understand the project's existing commit message style and conventions.
-4. If there are no changes at all, inform the user and stop.
+4. Run `git rev-parse --abbrev-ref HEAD` to check the current branch.
+   - If on `master` or `main`: **do not commit to this branch**. Instead:
+     a. After analyzing changes in Step 2, generate a descriptive branch name using the format `<type>/<short-description>` (e.g., `feat/add-auth-module`, `fix/login-redirect`).
+     b. Run `git checkout -b <branch-name>` before executing any commits.
+     c. Inform the user: "You were on `<branch>`. Created branch `<new-branch>` to protect the main branch."
+5. If there are no changes at all, inform the user and stop.
 
 ### Step 2: Analyze and Group Changes
 
