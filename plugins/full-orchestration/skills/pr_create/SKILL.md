@@ -5,7 +5,9 @@ description: "Create a pull request from a reviewed implementation branch. Use w
 
 # PR Creation
 
-Orchestrate Stage 5 of the software engineering pipeline: take the reviewed, approved implementation from Stage 4 and create a well-structured pull request with full traceability from ticket to implementation.
+**State file**: `.claude/swe-state/{ticket-id}.json`
+
+Create a well-structured PR from the reviewed implementation.
 
 ## Usage
 
@@ -15,310 +17,78 @@ Orchestrate Stage 5 of the software engineering pipeline: take the reviewed, app
 
 ---
 
-## Prerequisites
+## Phase 1: Validate and Gather
 
-Validate that these files exist before proceeding:
+Read state. Confirm `stages.review.approved` is true. Extract `feature_branch`, `target_branch`. Read ticket.json for ticket URL and source system. Read impl summary and review summary. Verify feature branch exists.
 
-1. **Review Summary**: `.claude/swe-state/{ticket-id}/review-summary.md`
-2. **Implementation Summary**: `.claude/swe-state/{ticket-id}/impl-summary.md`
-3. **Pipeline State**: `.claude/swe-state/{ticket-id}.json`
-
-Read `.claude/swe-state/{ticket-id}.json` and confirm `stages.review.approved` is `true`.
-
-If any prerequisite is missing or Stage 4 review is not approved, stop and tell the user:
-
-```
-Missing prerequisites for PR creation.
-
-Required:
-  - .claude/swe-state/{ticket-id}/review-summary.md   (review summary)
-  - .claude/swe-state/{ticket-id}/impl-summary.md     (implementation summary)
-  - .claude/swe-state/{ticket-id}.json                 (pipeline state with stages.review.approved = true)
-
-Run /code_review {ticket-id} to complete review first.
-```
-
----
-
-## Phase 1: Validate Inputs
-
-1. Read `.claude/swe-state/{ticket-id}.json`
-2. Extract the **feature branch name** from `feature_branch` (top-level field)
-3. Extract the **target branch** from `target_branch` in the state file (default: `main` if not set)
-4. Extract **ticket data**: ticket ID, ticket URL, ticketing system (jira/linear/github)
-5. Read `.claude/swe-state/{ticket-id}/impl-summary.md` — extract test results, changes list
-6. Read `.claude/swe-state/{ticket-id}/review-summary.md` — extract findings, iterations, resolutions
-7. Read the spec file if referenced in state — extract spec summary
-8. Verify the feature branch exists: `git branch --list <branch>`
-9. Report to the user:
-
-```
-PR Creation: {ticket-id}
-  Branch: {feature-branch}
-  Target: {target-branch}
-  Ticket: {ticket-url}
-  Review: Approved ({iterations} iteration(s), {findings-resolved} findings resolved)
-
-Generating PR content...
-```
+Report: ticket ID, branches, ticket URL, review iteration count.
 
 ---
 
 ## Phase 2: Generate PR Content
 
-### Title
+**Title**: `{type}({ticket-id}): {description}` — under 72 chars.
 
-Generate a conventional-commit title:
+Type mapping: feature→`feat`, bug→`fix`, refactor→`refactor`, docs→`docs`, test-only→`test`, chore→`chore`.
 
-```
-{type}({ticket-id}): {description}
-```
+**Labels**: feature→`enhancement`, bug→`bug`, refactor→`refactor`, docs→`docs`, test→`test`, security fix→`security`.
 
-- **Type mapping** from ticket/change characteristics:
-
-| Change Type | Prefix |
-|-------------|--------|
-| New feature | `feat` |
-| Bug fix | `fix` |
-| Refactor | `refactor` |
-| Documentation | `docs` |
-| Test-only | `test` |
-| Chore/maintenance | `chore` |
-
-- **Scope**: the ticket ID (e.g., `PROJ-123`, `LIN-456`, `#78`)
-- **Description**: concise summary, total title under 72 characters
-
-### Labels
-
-Determine labels based on change type:
-
-| Change Type | Label |
-|-------------|-------|
-| New feature | `enhancement` |
-| Bug fix | `bug` |
-| Refactor | `refactor` |
-| Documentation | `docs` |
-| Test-only | `test` |
-| Security fix | `security` |
-
-### Body
-
-Assemble a structured PR body from pipeline artifacts:
+**Body** — assemble from pipeline artifacts:
 
 ```markdown
 ## Summary
-
-{2-3 sentence summary of what was built and why}
-
+{2-3 sentences}
 Resolves [{ticket-id}]({ticket-url})
 
 ## Spec
-
-**Goal**: {goal from spec}
-
-**Approach**: {approach summary}
-
-**Key decisions**:
-- {decision 1}
-- {decision 2}
+**Goal**: {from spec}  **Approach**: {summary}
+**Key decisions**: {list}
 
 ## Changes
-
-- `{file}` — {description of change}
-- ...
+- `{file}` — {description}
 
 ## Test Results
-
-```
-Tests:  {passed} passed, {failed} failed
-Suites: {suite-count} passed
-Time:   {duration}
-```
+{from impl summary}
 
 ## Review Summary
-
-Reviewed by: {reviewer agents}
-
-| Finding | Severity | Resolution |
-|---------|----------|------------|
-| {finding} | {severity} | {resolution} |
+{iterations, findings table, resolutions}
 
 ## Checklist
-
 - [x] Tests pass locally
-- [x] Code review completed ({iterations} iteration(s))
-- [x] No critical or major findings remaining
+- [x] Code review completed
+- [x] No critical/major findings remaining
 - [ ] CI pipeline (pending)
 ```
 
-### Preview and Confirm
-
-Show the full PR preview (title, labels, body) and ask the user to choose:
-
-- **Create** — proceed with PR creation
-- **Edit** — let the user modify the title or body before creating
-- **Cancel** — abort PR creation; pipeline state is unchanged
+**Preview gate**: Show title, labels, body. User chooses: Create, Edit, or Cancel.
 
 ---
 
 ## Phase 3: Create PR
 
-### 3.1 Push Branch
-
-Push the feature branch to the remote if it hasn't been pushed yet:
-
-```bash
-git push -u origin {feature-branch}
-```
-
-**Ask the user for confirmation** before pushing.
-
-### 3.2 Check for Existing PR
-
-```bash
-gh pr list --head {feature-branch} --json number,url
-```
-
-If a PR already exists, show the existing PR URL and offer to update its description instead of creating a new one.
-
-### 3.3 Create the PR
-
-```bash
-gh pr create --title "{title}" --body "{body}" --base {target-branch}
-```
-
-Where `{body}` is the structured PR body assembled in Phase 2.
-
-### 3.4 Apply Labels
-
-```bash
-gh pr edit {pr_number} --add-label "{label1},{label2}"
-```
-
-### 3.5 Capture Result
-
-Extract the PR number and URL from the `gh pr create` output.
+1. **Push** (with user confirmation): `git push -u origin {feature_branch}`
+2. **Check existing**: `gh pr list --head {feature_branch} --json number,url` — offer to update if exists
+3. **Create**: `gh pr create --title "{title}" --body "{body}" --base {target_branch}`
+4. **Labels**: `gh pr edit {number} --add-label "{labels}"`
 
 ---
 
-## Phase 4: Update Ticket Status
+## Phase 4: Update Ticket (non-fatal)
 
-Based on the detected ticketing system, update the source ticket. All ticket updates are **non-fatal** — warn and continue on failure.
-
-### Jira
-
-```
-MCP tool: atlassian_jira_transition_issue
-  issue_key: {ticket-id}
-  transition: "In Review"
-
-MCP tool: atlassian_jira_add_comment
-  issue_key: {ticket-id}
-  body: "PR created: {pr_url}\n\nChanges: {summary}"
-```
-
-### Linear
-
-```
-MCP tool: linear_update_issue
-  issue_id: {ticket-id}
-  status: "In Review"
-
-MCP tool: linear_create_comment
-  issue_id: {ticket-id}
-  body: "PR created: {pr_url}\n\nChanges: {summary}"
-```
-
-### GitHub Issues
-
-No MCP needed — the `Resolves #{issue-number}` line in the PR body auto-links the issue. Add an explicit comment:
-
-```bash
-gh issue comment {issue-number} --body "PR created: {pr_url}"
-```
-
----
-
-## Phase 5: Post-PR Actions
-
-1. **Request reviewers** — If the project has a `.github/CODEOWNERS` file or configured reviewer list, request reviews:
-   ```bash
-   gh pr edit {pr_number} --add-reviewer {reviewer1},{reviewer2}
-   ```
-   Skip if no reviewers are configured.
-
-2. **Report CI monitoring** — The PR creation triggers CI automatically. Report the monitoring command (non-blocking):
-   ```
-   CI checks running. Monitor with:
-     gh pr checks {pr_number} --watch
-   ```
-
----
-
-## Phase 6: Update Pipeline State
-
-Update `.claude/swe-state/{ticket-id}.json` with Stage 5 results:
-
-```json
-{
-  "current_stage": "pr",
-  "status": "completed",
-  "stages": {
-    "pr": {
-      "completed": true,
-      "pr_number": 0,
-      "pr_url": "",
-      "title": "",
-      "labels": [],
-      "ticket_updated": false,
-      "reviewers_requested": false
-    }
-  }
-}
-```
-
-Read the existing state file first and merge — do not overwrite prior stage data.
-
----
-
-## Error Handling
-
-| Scenario | Behavior |
+| System | Action |
 |---|---|
-| `gh auth` failure | Prompt user to run `gh auth login`; preserve all artifacts for manual PR creation |
-| Branch conflict | Offer to rebase the feature branch; ask user before force-pushing |
-| PR already exists | Show existing PR URL; offer to update the description instead |
-| MCP ticket update fails | Log warning; continue without ticket update; suggest re-running MCP setup |
-| Label application fails | Log warning; continue — labels can be added manually |
-| Push rejected | Show error; suggest checking repository permissions |
-
-Post-creation errors (Phases 4–5) are non-fatal. The orchestrator preserves all artifacts so the user can complete these steps manually if needed.
+| Jira | MCP: `atlassian_jira_transition_issue` to "In Review" + `atlassian_jira_add_comment` |
+| Linear | MCP: `linear_update_issue` to "In Review" + `linear_create_comment` |
+| GitHub | Auto-linked via `Resolves #N`; add comment with `gh issue comment` |
 
 ---
 
-## Artifacts Produced
+## Phase 5: Post-PR
 
-| File | Contents |
-|---|---|
-| `.claude/swe-state/{ticket-id}.json` | Updated pipeline state with PR details |
-
-All other artifacts (review summary, impl summary, spec) are read-only inputs from prior stages.
+Request reviewers from CODEOWNERS if available: `gh pr edit {number} --add-reviewer {list}`. Report CI monitoring command.
 
 ---
 
-## Completion
+## Phase 6: Update State
 
-Report the final status:
-
-```
-PR Created: {ticket-id}
-
-  PR:      {pr_url}
-  Labels:  {labels}
-  Ticket:  {ticket-status-update-result}
-  CI:      Pending — gh pr checks {pr_number} --watch
-
-Pipeline complete. No further stages.
-```
-
-This is the final stage — no handoff.
+Set `stages.pr.completed = true`, populate `pr_number`, `pr_url`, `title`, `labels`, `ticket_updated`, `reviewers_requested`. Set `status = "completed"`.
