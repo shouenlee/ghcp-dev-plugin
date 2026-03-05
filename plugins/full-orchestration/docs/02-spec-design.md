@@ -368,6 +368,27 @@ Spec + Impl Doc stored, Stage 3 begins
 
 ---
 
+## Dependency Order
+
+Every agent's inputs must exist before it runs. The table below traces each step's inputs back to the step that produces them.
+
+| Step | Component | Inputs Required | Produced By | Output File |
+|---|---|---|---|---|
+| 2A | Explore subagents (parallel) | `ticket.json` | Stage 1 | — |
+| 2A | spec-writer (merge) | Explorer outputs | 2A explorers | `.claude/specs/{ticket-id}-context.md` |
+| 2B | SpecArchitect | `ticket.json`, `{ticket-id}-context.md` | Stage 1, 2A | `.claude/specs/{ticket-id}.md` |
+| — | User approval gate | `{ticket-id}.md` | 2B | — |
+| 2C | spec-review → 4 reviewers (parallel) | `{ticket-id}.md`, `ticket.json`, `{ticket-id}-context.md` | 2B, Stage 1, 2A | `.claude/specs/{ticket-id}-review-spec.md` |
+| — | User approval gate | `{ticket-id}-review-spec.md` | 2C | — |
+| 2D | ImplPlanner | `{ticket-id}.md`, `{ticket-id}-context.md` | 2B, 2A | `.claude/specs/{ticket-id}-impl.md` |
+| — | User approval gate | `{ticket-id}-impl.md` | 2D | — |
+| 2E | spec-review → 4 reviewers (parallel) | `{ticket-id}-impl.md`, `ticket.json`, `{ticket-id}-context.md` | 2D, Stage 1, 2A | `.claude/specs/{ticket-id}-review-impl.md` |
+| — | Final user approval gate | `{ticket-id}-review-impl.md` | 2E | — |
+
+The flow is strictly sequential (2A → 2B → 2C → 2D → 2E) with user approval gates between each step, so no agent runs before its inputs exist. Within 2A and 2C/2E, agents run in parallel but share no write dependencies — explorers produce independent output sections, and reviewers produce independent reviews consolidated by the orchestrator after all complete.
+
+---
+
 ## Spec Storage
 
 All Stage 2 artifacts are stored under `.claude/specs/`:
