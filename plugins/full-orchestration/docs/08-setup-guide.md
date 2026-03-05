@@ -11,15 +11,15 @@ Before installing the plugin, make sure the following tools are available on you
 | **Claude Code CLI** | Runtime for the plugin | `claude --version` |
 | **`gh` CLI** | GitHub Issues intake (Stage 1), PR creation (Stage 5) | `gh --version` |
 | **`gh` authenticated** | API access to your repos | `gh auth status` |
-| **Git** | Branch creation, worktrees, commits | `git --version` |
+| **Git** | Branch creation, commits | `git --version` |
 | **Project test runner** | TDD stage needs to run tests | `pytest --version`, `npx jest --version`, `go test`, etc. |
 
 The test runner does not need to be globally installed — it just needs to be runnable from your project root via the command that your project normally uses.
 
 ## Plugin Installation
 
-```bash
-claude plugin add ./plugins/full-orchestration
+```
+/plugin install full-orchestration@ghcp-dev-plugin
 ```
 
 This registers the `/swe` skill, orchestration agents, and pipeline hooks with Claude Code.
@@ -98,14 +98,13 @@ To use this approach:
 
 ## Dependency Plugins
 
-The pipeline delegates Stage 4 (Code Review) and Stage 5 (PR Creation) to separate plugins. Install them alongside `full-orchestration`:
+The pipeline delegates Stage 4 (Code Review) to a separate plugin. Install it alongside `full-orchestration`:
 
 ```bash
-claude plugin add ./plugins/deep_review    # Stage 4: Multi-agent adversarial code review
-claude plugin add ./plugins/gh-pr-tools    # Stage 5: PR creation with structured descriptions
+/plugin install deep-review@ghcp-dev-plugin    # Stage 4: Multi-agent adversarial code review
 ```
 
-Both are optional — the pipeline will warn you at the relevant stage if a dependency plugin is missing, but it will not block earlier stages.
+This is optional — the pipeline will warn you at the relevant stage if the dependency plugin is missing, but it will not block earlier stages. Stage 5 (PR Creation) uses the `gh` CLI directly and has no plugin dependency.
 
 ## Configuration Options
 
@@ -132,7 +131,7 @@ This runs a preflight check that validates:
 - `gh` CLI is installed and authenticated
 - Git is available and the current directory is a repository
 - MCP servers are reachable (if configured)
-- Dependency plugins (`deep-review`, `gh-pr-tools`) are installed
+- Dependency plugin (`deep-review`) is installed
 - A test runner is detected for the current project
 
 A green checkmark appears next to each passing check. Any failures include a remediation hint.
@@ -164,7 +163,7 @@ gh auth status  # Confirm the correct account and scopes
 **Symptom:** `/swe` is not recognized as a skill.
 
 **Fixes:**
-- Re-install: `claude plugin add ./plugins/full-orchestration`
+- Re-install: `/plugin install full-orchestration@ghcp-dev-plugin`
 - Confirm the plugin directory contains `.claude-plugin/plugin.json`
 - Check that the skill file exists at `plugins/full-orchestration/skills/swe/SKILL.md`
 

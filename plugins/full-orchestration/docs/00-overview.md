@@ -36,7 +36,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
                ┌──────────────────────────┐
                │ Stage 3: TDD Implement.   │
                │   (tdd-engineer agent)    │
-               │   Isolated worktree       │
+               │   Feature branch           │
                └────────────┬─────────────┘
                             │ ✅ User approves implementation
                             ▼
@@ -50,7 +50,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
                             ▼
                ┌──────────────────────────┐
                │  Stage 5: PR Creation     │
-               │  (gh-pr-tools plugin)     │
+               │  (gh CLI)                 │
                └──────────────────────────┘
 ```
 
@@ -66,7 +66,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 | Ticket ingestion | No | MCP-based fetch from Jira, Linear, GitHub Issues |
 | Codebase exploration team | No | 3-5 parallel explorer agents that map affected areas |
 | Spec authoring & review | No | Structured spec with 4-reviewer adversarial review |
-| TDD workflow | No | Test-first implementation in isolated worktree |
+| TDD workflow | No | Test-first implementation on a feature branch |
 | Adversarial code review | Partially (single perspective) | Multi-agent review via `deep-review` plugin |
 | End-to-end orchestration | No | Single `/swe` command drives the full pipeline |
 
@@ -76,11 +76,11 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 
 2. **Spec & Design** — An explorer team fans out across the codebase to identify affected areas. The spec architect synthesizes findings into a technical spec. A review team of four specialists (maintainability, security, efficiency, completeness) evaluates the spec. An implementation planner produces a step-by-step build plan. A final review validates the plan.
 
-3. **TDD Implementation** — A `tdd-engineer` agent works in an isolated git worktree. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
+3. **TDD Implementation** — A `tdd-engineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
 
 4. **Code Review** — Delegates to the `deep-review` plugin. Three agents (skeptic, advocate, architect) review the diff from independent perspectives and produce a consolidated assessment.
 
-5. **PR Creation** — Delegates to the `gh-pr-tools` plugin. Creates a PR with a structured description, links the original ticket, and includes the review summary.
+5. **PR Creation** — Creates a PR via the `gh` CLI with a structured description, links the original ticket, and includes the review summary.
 
 Each stage transition is an **approval gate**: the pipeline pauses, shows you the output, and waits for explicit confirmation before proceeding.
 
@@ -88,7 +88,7 @@ Each stage transition is an **approval gate**: the pipeline pauses, shows you th
 
 ```bash
 # 1. Install the plugin
-claude plugin add ./plugins/full-orchestration
+/plugin install full-orchestration@ghcp-dev-plugin
 
 # 2. (Optional) Configure MCP for your ticketing system
 # Jira:

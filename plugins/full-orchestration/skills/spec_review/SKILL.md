@@ -28,18 +28,16 @@ Phase 1: GATHER CONTEXT (you, the orchestrator)
     ├── Accept document path as argument
     ├── Detect document type (spec vs impl plan)
     ├── Read document + ticket + context doc
-    └── Write context to /tmp/spec_review-${CLAUDE_SESSION_ID}-context.yaml
+    └── Write curated context to .claude/swe-state/{ticket-id}/review-context.md
 
 Phase 2: PARALLEL REVIEW (four agents)
-    ├── Verify context file exists
     ├── Spawn four reviewer agents in SINGLE message
-    └── Each reads context file and produces findings
+    └── Each reads the shared review-context.md and produces findings
 
 Phase 3: CONSOLIDATION (you, the orchestrator)
     ├── Collect and group findings by severity
     ├── Deduplicate and note multi-reviewer agreement
-    ├── Write consolidated review
-    └── Cleanup context file
+    └── Write consolidated review
 ```
 
 ---
@@ -69,44 +67,49 @@ Read these files:
 
 If the ticket or context document doesn't exist, proceed with what's available — the document under review is the minimum requirement.
 
-### 1.3 Write Context File
+### 1.3 Write Shared Context File
 
-Set the context file path:
+Create the state directory if it doesn't exist: `.claude/swe-state/{ticket-id}/`
+
+Write a curated context file to `.claude/swe-state/{ticket-id}/review-context.md`:
+
+```markdown
+# Review Context: {ticket-id}
+
+## Review Metadata
+- **Document path**: {path to document under review}
+- **Document type**: spec | impl
+- **Review mode**: spec | impl
+- **Ticket ID**: {ticket-id}
+
+## Document Under Review
+
+{full content of document under review}
+
+## Ticket
+
+{full content of ticket.json, or "Not available"}
+
+## Codebase Context
+
+{full content of context document, or "Not available"}
+
+## Instructions
+
+You are reviewing this document from your specialized perspective.
+Review mode is "{review_mode}" — use your corresponding review focus.
+Produce your findings in your standard output format.
+Reference specific sections, line numbers, or quotes from the document.
 ```
-CONTEXT_FILE="/tmp/spec_review-${CLAUDE_SESSION_ID}-context.yaml"
-```
 
-Write the context file:
-
-```yaml
-review:
-  document_path: <path to document under review>
-  document_type: spec | impl
-  review_mode: spec | impl
-  ticket_id: <extracted ticket ID>
-
-document_content: |
-  <full content of document under review>
-
-ticket: |
-  <full content of ticket.json, or "Not available">
-
-context: |
-  <full content of context document, or "Not available">
-
-instructions: |
-  You are reviewing this document from your specialized perspective.
-  Review mode is "{review_mode}" — use your corresponding review focus.
-  Produce your findings in your standard output format.
-  Reference specific sections, line numbers, or quotes from the document.
-```
+This file gives each reviewer a single curated document to read, with review mode and instructions included. It also persists for debugging and re-runs.
 
 ### 1.4 Verify Context File
 
-Before Phase 2, confirm the file exists:
+Before Phase 2, confirm the file was written:
 
 ```bash
-test -f "$CONTEXT_FILE" && echo "Ready" || echo "ERROR: Context file missing"
+test -f ".claude/swe-state/{ticket-id}/review-context.md" && echo "Ready" || echo "ERROR: Context file missing"
 ```
 
 Do NOT spawn agents if the context file doesn't exist.
@@ -115,18 +118,15 @@ Do NOT spawn agents if the context file doesn't exist.
 
 ## Phase 2: Parallel Review
 
-Spawn FOUR agents in a SINGLE message using the Agent tool. Each agent reads the context file independently.
-
-Find the plugin path first: `**/full-orchestration/agents/*.agent.md`
+Spawn FOUR agents in a SINGLE message using the Agent tool. Each agent reads the shared context file.
 
 **Maintainability Reviewer**:
 ```
 subagent_type: full-orchestration:MaintainabilityReviewer
 prompt: |
   You are the MAINTAINABILITY REVIEWER in a spec review.
-  Read your instructions: {plugin-path}/agents/maintainability-reviewer.agent.md
-  Read the review context: {context-file-path}
-  Produce your review in the format specified in your instructions.
+  Read the review context: .claude/swe-state/{ticket-id}/review-context.md
+  Produce your review in the format specified in your agent instructions.
 ```
 
 **Security Reviewer**:
@@ -134,9 +134,8 @@ prompt: |
 subagent_type: full-orchestration:SecurityReviewer
 prompt: |
   You are the SECURITY REVIEWER in a spec review.
-  Read your instructions: {plugin-path}/agents/security-reviewer.agent.md
-  Read the review context: {context-file-path}
-  Produce your review in the format specified in your instructions.
+  Read the review context: .claude/swe-state/{ticket-id}/review-context.md
+  Produce your review in the format specified in your agent instructions.
 ```
 
 **Efficiency Reviewer**:
@@ -144,9 +143,8 @@ prompt: |
 subagent_type: full-orchestration:EfficiencyReviewer
 prompt: |
   You are the EFFICIENCY REVIEWER in a spec review.
-  Read your instructions: {plugin-path}/agents/efficiency-reviewer.agent.md
-  Read the review context: {context-file-path}
-  Produce your review in the format specified in your instructions.
+  Read the review context: .claude/swe-state/{ticket-id}/review-context.md
+  Produce your review in the format specified in your agent instructions.
 ```
 
 **Completeness Reviewer**:
@@ -154,9 +152,8 @@ prompt: |
 subagent_type: full-orchestration:CompletenessReviewer
 prompt: |
   You are the COMPLETENESS REVIEWER in a spec review.
-  Read your instructions: {plugin-path}/agents/completeness-reviewer.agent.md
-  Read the review context: {context-file-path}
-  Produce your review in the format specified in your instructions.
+  Read the review context: .claude/swe-state/{ticket-id}/review-context.md
+  Produce your review in the format specified in your agent instructions.
 ```
 
 ### Handle Failures
@@ -248,16 +245,6 @@ Verdict: PASS / NEEDS REVISION
 **Verdict logic:**
 - **PASS**: Zero CRITICAL and zero HIGH findings
 - **NEEDS REVISION**: Any CRITICAL or HIGH findings exist
-
-### 3.5 Cleanup
-
-Delete the context file regardless of outcome:
-
-```bash
-rm -f "$CONTEXT_FILE"
-```
-
-Context file may contain sensitive code — always delete.
 
 ---
 

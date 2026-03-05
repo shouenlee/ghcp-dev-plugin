@@ -40,7 +40,7 @@ For full details on how context is gathered, agents are spawned, and synthesis w
 
 ```
 ┌─────────────────────────────────┐
-│  Generate diff from worktree    │
+│  Generate diff from branch       │
 │  (git diff main...feature)      │
 └──────────────┬──────────────────┘
                │
@@ -94,7 +94,7 @@ For full details on how context is gathered, agents are spawned, and synthesis w
 
 ### Iteration steps
 
-1. **Spawn review agents** — The orchestrator invokes `/deep_review` against the current diff between the worktree branch and the target branch.
+1. **Spawn review agents** — The orchestrator invokes `/deep_review` against the current diff between the feature branch and the target branch.
 2. **Collect feedback** — Each agent's raw analysis is preserved, then consolidated into a structured review document with severity ratings.
 3. **Present findings** — The user sees the consolidated review with all findings categorized by severity.
 4. **Fix cycle** — If changes are needed:

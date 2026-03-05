@@ -6,11 +6,9 @@ Stage 5 is the final step in the pipeline. It takes the reviewed, approved imple
 
 ---
 
-## gh-pr-tools Plugin Reuse
+## PR Creation via `gh` CLI
 
-This stage delegates to the [`pr-create`](../../gh-pr-tools/skills/pr-create/SKILL.md) skill from the `gh-pr-tools` plugin. The orchestrator prepares the title, description, and options, then invokes `/pr-create` to handle branch pushing, duplicate detection, and the actual `gh pr create` call.
-
-The orchestrator adds pipeline-specific content (ticket links, spec summary, review results) on top of what `pr-create` normally generates.
+This stage uses the `gh` CLI directly to create the pull request. The orchestrator assembles a pipeline-specific title and body (with ticket links, spec summary, test results, and review findings), pushes the feature branch, checks for existing PRs, and calls `gh pr create`.
 
 ---
 
@@ -192,7 +190,6 @@ The orchestrator treats PR creation errors as non-fatal for the pipeline — the
 
 ## Cross-References
 
-- [gh-pr-tools plugin](../../gh-pr-tools/skills/pr-create/SKILL.md) — the `pr-create` skill used to create the PR
 - [Stage 4: Code Review](04-code-review.md) — produces the review summary included in the PR
 - [Stage 1: Ticket Intake](01-ticket-intake.md) — provides the ticket ID and link used in the PR title and body
 - [Stage 2: Spec & Design](02-spec-design.md) — provides the spec summary included in the PR

@@ -1,6 +1,6 @@
 ---
 name: pr_create
-description: "Create a pull request from a reviewed implementation branch. Use when Stage 4 code review is approved and you are ready to open a PR. Generates a conventional-commit title, structured body with ticket link, spec summary, test results, and review findings, then delegates to the gh-pr-tools pr_create skill."
+description: "Create a pull request from a reviewed implementation branch. Use when Stage 4 code review is approved and you are ready to open a PR. Generates a conventional-commit title, structured body with ticket link, spec summary, test results, and review findings, then creates the PR via gh CLI."
 ---
 
 # PR Creation
@@ -44,7 +44,7 @@ Run /code_review {ticket-id} to complete review first.
 
 1. Read `.claude/swe-state/{ticket-id}.json`
 2. Extract the **feature branch name** from `stages.implement.branch`
-3. Extract the **target branch** (default: `main`)
+3. Extract the **target branch** from `target_branch` in the state file (default: `main` if not set)
 4. Extract **ticket data**: ticket ID, ticket URL, ticketing system (jira/linear/github)
 5. Read `.claude/swe-state/{ticket-id}/impl-summary.md` — extract test results, changes list
 6. Read `.claude/swe-state/{ticket-id}/review-summary.md` — extract findings, iterations, resolutions
@@ -163,14 +163,41 @@ Show the full PR preview (title, labels, body) and ask the user to choose:
 
 ## Phase 3: Create PR
 
-1. Invoke `/pr_create --target {target-branch} --title "{title}"` with the assembled body. The `gh-pr-tools:pr_create` skill handles branch pushing, duplicate detection, and the actual `gh pr create` call.
-2. Apply labels via:
-   ```bash
-   gh pr edit {pr_number} --add-label "{label1},{label2}"
-   ```
-3. Capture the PR number and URL from the output.
+### 3.1 Push Branch
 
-If the PR already exists, show the existing PR URL and offer to update its description instead.
+Push the feature branch to the remote if it hasn't been pushed yet:
+
+```bash
+git push -u origin {feature-branch}
+```
+
+**Ask the user for confirmation** before pushing.
+
+### 3.2 Check for Existing PR
+
+```bash
+gh pr list --head {feature-branch} --json number,url
+```
+
+If a PR already exists, show the existing PR URL and offer to update its description instead of creating a new one.
+
+### 3.3 Create the PR
+
+```bash
+gh pr create --title "{title}" --body "{body}" --base {target-branch}
+```
+
+Where `{body}` is the structured PR body assembled in Phase 2.
+
+### 3.4 Apply Labels
+
+```bash
+gh pr edit {pr_number} --add-label "{label1},{label2}"
+```
+
+### 3.5 Capture Result
+
+Extract the PR number and URL from the `gh pr create` output.
 
 ---
 
@@ -243,7 +270,6 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 5 results:
       "pr_url": "",
       "title": "",
       "labels": [],
-      "target_branch": "main",
       "ticket_updated": false,
       "reviewers_requested": false
     }

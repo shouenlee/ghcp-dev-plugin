@@ -391,7 +391,7 @@ The flow is strictly sequential (2A → 2B → 2C → 2D → 2E) with user appro
 
 | Step | Component | Inputs Required | Produced By | Output File |
 |---|---|---|---|---|
-| 3A | TddEngineer | `{ticket-id}.md`, `{ticket-id}-impl.md`, `{ticket-id}-context.md` | Stage 2 (2B, 2D, 2A) | Feature branch `feat/{ticket-id}-{desc}` |
+| 3A | TddEngineer | `{ticket-id}.md`, `{ticket-id}-impl.md`, `{ticket-id}-context.md` | Stage 2 (2B, 2D, 2A) | Commits on current branch |
 | 3B | TddEngineer (summary) | All TDD steps complete | TddEngineer agent | `.claude/swe-state/{ticket-id}/impl-summary.md` |
 
 ---

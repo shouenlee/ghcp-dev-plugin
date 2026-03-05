@@ -139,7 +139,6 @@ Spawn the spec architect agent:
 subagent_type: full-orchestration:SpecArchitect
 prompt: |
   You are the SPEC ARCHITECT.
-  Read your instructions: {plugin-path}/agents/spec-architect.agent.md
   Ticket: .claude/swe-state/{ticket-id}/ticket.json
   Context: .claude/specs/{ticket-id}-context.md
   Write the spec to: .claude/specs/{ticket-id}.md
@@ -198,7 +197,6 @@ Spawn the implementation planner agent:
 subagent_type: full-orchestration:ImplPlanner
 prompt: |
   You are the IMPLEMENTATION PLANNER.
-  Read your instructions: {plugin-path}/agents/impl-planner.agent.md
   Spec: .claude/specs/{ticket-id}.md
   Context: .claude/specs/{ticket-id}-context.md
   Write the implementation plan to: .claude/specs/{ticket-id}-impl.md
@@ -256,7 +254,6 @@ After the user approves the implementation plan (end of Sub-stage 2E), update `.
 ```json
 {
   "current_stage": "spec",
-  "status": "awaiting_approval",
   "stages": {
     "spec": {
       "completed": true,

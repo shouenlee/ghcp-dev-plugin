@@ -1,11 +1,11 @@
 ---
 name: tdd_implement
-description: "Implement a ticket using test-driven development. Use when you have an approved spec and implementation plan and are ready to write code. Spawns a TDD engineer agent in an isolated worktree."
+description: "Implement a ticket using test-driven development. Use when you have an approved spec and implementation plan and are ready to write code. Spawns a TDD engineer agent on a feature branch."
 ---
 
 # TDD Implement
 
-Orchestrate Stage 3 of the software engineering pipeline: spawn the TDD engineer agent to implement the approved spec and implementation plan using strict red/green/refactor methodology in an isolated git worktree.
+Orchestrate Stage 3 of the software engineering pipeline: spawn the TDD engineer agent to implement the approved spec and implementation plan using strict red/green/refactor methodology on a feature branch.
 
 ## Usage
 
@@ -45,13 +45,15 @@ Run /spec_writer {ticket-id} to generate these files first.
 1. Read `.claude/specs/{ticket-id}-impl.md`
 2. Extract the step count from Section 6 (Implementation Order)
 3. Detect the primary language from the implementation plan
-4. Report to the user:
+4. Record the current branch name: `git branch --show-current`
+5. Report to the user:
 
 ```
 TDD Implementation: {ticket-id}
   Steps: {step-count}
   Language: {language}
-  Strategy: Red/Green/Refactor in isolated worktree
+  Branch: {current-branch}
+  Strategy: Red/Green/Refactor
 
 Spawning TDD engineer...
 ```
@@ -60,14 +62,12 @@ Spawning TDD engineer...
 
 ## Phase 2: Spawn TDD Engineer
 
-Spawn the TDD engineer agent in an isolated worktree:
+Spawn the TDD engineer agent. The agent works on the current branch — it does not create or switch branches.
 
 ```
 subagent_type: full-orchestration:TddEngineer
-isolation: "worktree"
 prompt: |
   You are the TDD ENGINEER.
-  Read your instructions: plugins/full-orchestration/agents/tdd-engineer.agent.md
 
   Your inputs:
     Technical spec:       .claude/specs/{ticket-id}.md
@@ -75,7 +75,7 @@ prompt: |
     Codebase context:     .claude/specs/{ticket-id}-context.md
 
   Execute the implementation plan using strict TDD (red/green/refactor).
-  Create feature branch: feat/{ticket-id}-{short-description}
+  Work on the current branch. Do NOT create or switch branches.
   Commit after each passing step.
   Run the full test suite when all steps are complete.
 
@@ -94,7 +94,7 @@ Wait for the agent to complete.
 ```
 TDD Implementation Complete: {ticket-id}
 
-Branch: feat/{ticket-id}-{short-description}
+Branch: {current-branch}
 Tests:  {new-count} new, {modified-count} modified — {PASS/FAIL}
 Coverage: {X%} (if available)
 
@@ -113,12 +113,10 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 3 results:
 ```json
 {
   "current_stage": "implement",
-  "status": "awaiting_approval",
   "stages": {
     "implement": {
       "completed": true,
-      "worktree": ".claude/worktrees/{ticket-id}",
-      "branch": "feat/{ticket-id}-{short-description}",
+      "branch": "{current-branch}",
       "test_results": {
         "new_tests": 0,
         "modified_tests": 0,
@@ -140,7 +138,7 @@ Read the existing state file first and merge — do not overwrite prior stage da
 |---|---|
 | Missing prerequisite files | Stop with error message pointing to `/spec_writer` |
 | Agent failure (crash/timeout) | Report the error, save partial state, suggest `/swe {ticket-id} --from=implement` to retry |
-| No summary produced | Check if the worktree has commits; report partial progress and suggest retry |
+| No summary produced | Check if the branch has commits; report partial progress and suggest retry |
 | WIP commits present | Warn the user that some steps were blocked; list affected steps from the summary |
 | All steps blocked | Report that implementation could not proceed; suggest reviewing the implementation plan |
 
@@ -151,16 +149,5 @@ Read the existing state file first and merge — do not overwrite prior stage da
 | File | Contents |
 |---|---|
 | `.claude/swe-state/{ticket-id}/impl-summary.md` | Implementation summary with branch, changes, test results, deviations |
-| Feature branch `feat/{ticket-id}-{short-description}` | All committed code changes from the TDD cycle |
+| Current branch (recorded in state) | All committed code changes from the TDD cycle |
 
----
-
-## Handoff to Stage 4
-
-After the user reviews and approves the implementation:
-
-```
-Next step: /code_review {ticket-id}
-
-Or continue the full pipeline: /swe {ticket-id} --from=review
-```

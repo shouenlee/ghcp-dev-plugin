@@ -40,9 +40,9 @@ Run /tdd_implement {ticket-id} to complete implementation first.
 
 ## Phase 1: Validate Inputs
 
-1. Read `.claude/swe-state/{ticket-id}/impl-summary.md`
-2. Extract the **feature branch name** from the summary
-3. Extract the **target branch** from `.claude/swe-state/{ticket-id}.json` (default: `main`)
+1. Read `.claude/swe-state/{ticket-id}.json`
+2. Extract the **feature branch name** from `stages.implement.branch` in the state file
+3. Extract the **target branch** from `target_branch` in the state file (default: `main` if not set)
 4. Verify the feature branch exists: `git branch --list <branch>`
 5. Report to the user:
 
@@ -74,6 +74,17 @@ If the diff is empty, skip review and proceed directly to the approval gate.
 Ensure the feature branch is checked out, then invoke `/deep_review` with no arguments. The deep-review plugin will detect the current branch, gather the diff against the target branch on its own, spawn three parallel agents (Advocate, Skeptic, Architect), and produce a consolidated review.
 
 Do NOT pass a pre-generated diff — let deep-review handle context gathering internally.
+
+If `/deep_review` is not available (plugin not installed), stop and tell the user:
+
+```
+The deep-review plugin is required for code review but is not installed.
+
+Install it with:
+  /plugin install deep-review@ghcp-dev-plugin
+
+Then re-run: /code_review {ticket-id}
+```
 
 ### 2.3 Map Findings to Severity
 
@@ -121,7 +132,6 @@ If there are findings to fix (accepted Critical, Major, or Minor auto-fixes), sp
 subagent_type: full-orchestration:TddEngineer
 prompt: |
   You are the TDD ENGINEER applying review fixes.
-  Read your instructions: plugins/full-orchestration/agents/tdd-engineer.agent.md
 
   Feature branch: {feature-branch}
   Review findings to fix:
@@ -181,6 +191,7 @@ Proceeding is not recommended.
 
 Ask the user to choose:
 - **Approve** — proceed to Stage 5 (PR creation)
+- **Iterate** — reset `stages.implement.completed = false` in `.claude/swe-state/{ticket-id}.json`, then re-invoke `/tdd_implement {ticket-id}` to rework the implementation. After Stage 3 completes again, return to the review loop (Phase 2) for re-review.
 - **Continue manually** — exit the skill; user handles remaining issues
 - **Abort** — stop the pipeline for this ticket
 
@@ -193,6 +204,7 @@ Write the final summary to `.claude/swe-state/{ticket-id}/review-summary.md`.
 Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved` based on the user's choice in Phase 3:
 
 - **Approve** → `"approved": true`, `"status": "approved"`
+- **Iterate** → do not update Stage 4 state yet; reset `stages.implement.completed = false`, re-invoke `/tdd_implement`, then loop back to Phase 2
 - **Continue manually** → `"approved": false`, `"status": "manual"`
 - **Abort** → `"approved": false`, `"status": "aborted"`
 
@@ -205,7 +217,7 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved`
       "completed": true,
       "approved": true,
       "iterations": 0,
-      "branch": "feat/{ticket-id}-{short-description}",
+      "branch": "{current-branch}",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
         "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },
@@ -227,6 +239,7 @@ Read the existing state file first and merge — do not overwrite prior stage da
 |---|---|
 | Missing prerequisite files | Stop with error message pointing to `/tdd_implement` |
 | Stage 3 not completed | Stop with error message; suggest completing implementation first |
+| `deep-review` plugin not installed | Stop with install command: `/plugin install deep-review@ghcp-dev-plugin` |
 | Deep-review agent failure | Report which agent(s) failed; offer to re-trigger, proceed without, or abort |
 | TDD engineer failure during fix | Save partial fix state; report error and suggest retry with `/code_review {ticket-id}` |
 | Empty diff | Skip review; proceed directly to approval gate with no findings |
@@ -242,14 +255,3 @@ Read the existing state file first and merge — do not overwrite prior stage da
 | `.claude/swe-state/{ticket-id}/review-fixes-{N}.md` | Fixes applied by TDD engineer in each iteration |
 | `.claude/swe-state/{ticket-id}/review-summary.md` | Final review summary with all findings, resolutions, and follow-up items |
 
----
-
-## Handoff to Stage 5
-
-After the user approves the review:
-
-```
-Next step: /pr_create {ticket-id}
-
-Or continue the full pipeline: /swe {ticket-id} --from=pr
-```

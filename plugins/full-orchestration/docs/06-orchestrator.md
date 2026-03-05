@@ -26,7 +26,6 @@ description: >-
 ```
 /swe PROJ-123
 /swe https://github.com/org/repo/issues/42
-/swe PROJ-123 --skip-spec
 /swe PROJ-123 --from=implement
 ```
 
@@ -49,7 +48,7 @@ description: >-
     │   └─ Present spec + plan → User confirms ✓
     │
     ├─ Stage 3: tdd-engineer
-    │   ├─ Create isolated git worktree
+    │   ├─ Work on current branch
     │   ├─ Write failing tests from spec
     │   ├─ Implement until tests pass
     │   ├─ Run full test suite
@@ -61,8 +60,8 @@ description: >-
     │   ├─ If issues found → iterate with tdd-engineer
     │   └─ Present review → User confirms ✓
     │
-    └─ Stage 5: pr-create (external plugin)
-        ├─ Create PR with structured description
+    └─ Stage 5: pr-create
+        ├─ Create PR via gh CLI with structured description
         ├─ Link original ticket
         ├─ Include review summary
         └─ Return PR URL ✓
@@ -70,23 +69,22 @@ description: >-
 
 ## Stage Gating
 
-Every stage transition is an **approval gate**. The orchestrator pauses, displays the stage output, and waits for explicit user confirmation before moving to the next stage.
+Each stage skill owns its own approval gates — the orchestrator does not add additional prompts. When a stage skill returns successfully, the orchestrator marks the stage as completed in the state file and proceeds to the next stage.
 
-| Gate | What the user sees | Options |
-|------|--------------------|---------|
-| After Stage 1 | Parsed ticket summary with requirements and affected areas | Approve / Edit requirements / Abort |
-| After Stage 2 | Technical spec and implementation plan | Approve / Request changes / Abort |
-| After Stage 3 | Implementation diff and test results | Approve / Request changes / Abort |
-| After Stage 4 | Review assessment with findings | Approve / Iterate (re-enter Stage 3) / Abort |
-| After Stage 5 | PR URL | Done |
+| Stage | Skill | Approval gates within the skill |
+|-------|-------|---------------------------------|
+| 1 — Ticket Intake | `ticket_intake` | User confirms the parsed requirements summary |
+| 2 — Spec & Design | `spec_writer` | User approves spec (2B), spec review (2C), impl plan (2D), impl review (2E) |
+| 3 — TDD Implementation | `tdd_implement` | None (reports results; orchestrator proceeds) |
+| 4 — Code Review | `code_review` | User chooses: Approve / Iterate (re-enter Stage 3) / Continue manually / Abort |
+| 5 — PR Creation | `pr_create` | User confirms PR preview before creation |
 
-If the user requests changes at any gate, the orchestrator re-runs the current stage with the feedback incorporated and presents the output again.
+If the user aborts within a stage, the skill reports the abort and the orchestrator saves state for later resumption.
 
 ## CLI Arguments
 
 | Argument | Effect |
 |----------|--------|
-| `--skip-spec` | Skip Stage 2 entirely. Use when a spec already exists or for small, well-understood changes. The orchestrator jumps from Stage 1 directly to Stage 3. |
 | `--from=STAGE` | Resume from a specific stage. Valid values: `intake`, `spec`, `implement`, `review`, `pr`. Reads saved state from the previous stages. |
 | `--skip-review` | Skip Stage 4 code review. Proceeds directly from Stage 3 to Stage 5. |
 
@@ -95,9 +93,9 @@ If the user requests changes at any gate, the orchestrator re-runs the current s
 Each stage can also be invoked as a standalone skill:
 
 ```
-/ticket_intake PROJ-123       # Stage 1 only
-/spec_writer                  # Stage 2 only (reads ticket state)
-/spec_review                  # Run just the review team on an existing spec
+/ticket_intake PROJ-123                        # Stage 1 only
+/spec_writer PROJ-123                          # Stage 2 only (reads ticket state)
+/spec_review .claude/specs/PROJ-123.md         # Run just the review team on an existing spec
 ```
 
 When run standalone, stages read whatever state is available and produce their output without advancing the pipeline.
@@ -116,7 +114,7 @@ This state file contains:
 - Current stage and status
 - Ticket data (from Stage 1)
 - Spec and implementation plan (from Stage 2)
-- Worktree path and branch name (from Stage 3)
+- Branch name (from Stage 3)
 - Review findings (from Stage 4)
 
 ### Resumption
@@ -147,8 +145,8 @@ The orchestrator passes data between stages through the state file. Each stage r
 |-------|-------|--------|
 | 1 — Ticket Intake | Ticket ID (from CLI arg) | `ticket`: parsed requirements, acceptance criteria, affected areas |
 | 2 — Spec & Design | `ticket` | `spec`: technical spec, `impl_plan`: implementation steps |
-| 3 — TDD Implementation | `ticket`, `spec`, `impl_plan` | `worktree`: path, `branch`: name, `test_results`: pass/fail summary |
-| 4 — Code Review | `branch`, `worktree` | `review`: consolidated findings, `approved`: boolean |
+| 3 — TDD Implementation | `ticket`, `spec`, `impl_plan` | `branch`: name, `test_results`: pass/fail summary |
+| 4 — Code Review | `branch` | `review`: consolidated findings, `approved`: boolean |
 | 5 — PR Creation | `ticket`, `branch`, `review` | `pr_url`: the created PR URL |
 
 ### State File Structure
@@ -156,14 +154,26 @@ The orchestrator passes data between stages through the state file. Each stage r
 ```json
 {
   "ticket_id": "PROJ-123",
+  "target_branch": "main",
   "current_stage": "implement",
   "status": "awaiting_approval",
   "stages": {
-    "intake": { "completed": true, "ticket": { "..." } },
-    "spec": { "completed": true, "spec": { "..." }, "impl_plan": { "..." } },
-    "implement": { "completed": false, "worktree": null, "branch": null },
-    "review": { "completed": false },
-    "pr": { "completed": false }
+    "intake": {
+      "completed": true,
+      "ticket_file": ".claude/swe-state/PROJ-123/ticket.json"
+    },
+    "spec": {
+      "completed": true,
+      "spec_file": ".claude/specs/PROJ-123.md",
+      "impl_plan_file": ".claude/specs/PROJ-123-impl.md",
+      "context_file": ".claude/specs/PROJ-123-context.md",
+      "explorers_run": 4,
+      "spec_review_iterations": 1,
+      "plan_review_iterations": 1
+    },
+    "implement": { "completed": false, "branch": null, "test_results": null },
+    "review": { "completed": false, "approved": false, "iterations": 0, "findings": null },
+    "pr": { "completed": false, "pr_number": null, "pr_url": null }
   }
 }
 ```

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Stage 3 takes the approved technical spec and implementation doc from Stage 2 and implements the changes following strict test-driven development. A `tdd-engineer` agent works in an isolated git worktree, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
+Stage 3 takes the approved technical spec and implementation doc from Stage 2 and implements the changes following strict test-driven development. A `tdd-engineer` agent works on a dedicated feature branch, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
 
 This stage is mechanical by design. All design decisions were made in Stage 2. The implementation doc provides exact file paths, function signatures, test cases with inputs/outputs, and a step-by-step order. The TDD agent executes this plan without improvising.
 
@@ -14,7 +14,7 @@ This stage is mechanical by design. All design decisions were made in Stage 2. T
 
 ## Output
 
-- Feature branch `feat/{ticket-id}-{short-description}` with all changes committed
+- All changes committed on the current branch
 - All new and existing tests passing
 - Implementation summary for Stage 4 (code review)
 
@@ -39,7 +39,7 @@ This stage is mechanical by design. All design decisions were made in Stage 2. T
 
 ### Overview
 
-The `tdd-engineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation doc, creates a feature branch in an isolated worktree, and executes the implementation plan step by step using TDD.
+The `tdd-engineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation doc and executes the implementation plan step by step using TDD on the current branch.
 
 ### Workflow
 
@@ -47,7 +47,7 @@ The `tdd-engineer` agent is responsible for the full implementation cycle. It re
 Read approved spec + implementation doc
     │
     ▼
-Create feature branch: feat/{ticket-id}-{short-description}
+Confirm current branch
     │
     ▼
 For each step in implementation order:
@@ -109,7 +109,7 @@ After all steps are complete, the agent produces a summary:
 # Implementation Summary: {ticket-id}
 
 ## Branch
-feat/{ticket-id}-{short-description}
+{current branch name}
 
 ## Changes
 | File | Lines Changed | Description |
@@ -131,23 +131,16 @@ feat/{ticket-id}-{short-description}
 
 ---
 
-## Git Worktree Isolation
+## Feature Branch Strategy
 
-The `tdd-engineer` agent operates in an isolated git worktree to avoid disrupting the user's workspace. This is configured via the `isolation: "worktree"` setting in the agent definition.
+The user should create a feature branch and invoke `/swe` from it with a clean working tree (no uncommitted changes). The `tdd-engineer` agent works directly on the current branch.
 
 ### How It Works
 
-1. Before implementation begins, a new worktree is created at `.claude/worktrees/{ticket-id}`
-2. A new branch `feat/{ticket-id}-{short-description}` is created from the current HEAD
-3. All file edits, test runs, and commits happen inside the worktree
-4. The user's main working directory remains untouched
-5. After implementation completes, the branch is available for Stage 4 review
-
-### Benefits
-
-- User can continue working in their main checkout while implementation runs
-- Failed or abandoned implementations can be discarded without affecting the workspace
-- Multiple tickets can be implemented in parallel in separate worktrees
+1. The user creates a feature branch before invoking `/swe`
+2. The agent works on the current branch — it does not create or switch branches
+3. All file edits, test runs, and commits happen on the current branch
+4. After implementation completes, the branch is available for Stage 4 review
 
 ---
 

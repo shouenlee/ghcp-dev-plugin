@@ -94,7 +94,7 @@ description: >-
 ---
 ```
 
-**Body contains:** The full orchestration logic — argument parsing (`--skip-spec`, `--from=STAGE`, `--skip-review`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
+**Body contains:** The full orchestration logic — argument parsing (`--from=STAGE`, `--skip-review`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
 
 ### ticket_intake/SKILL.md
 
@@ -160,11 +160,11 @@ name: tdd_implement
 description: >-
   Implement a ticket using test-driven development. Use when you
   have an approved spec and implementation plan and are ready to
-  write code. Spawns a TDD engineer agent in an isolated worktree.
+  write code. Spawns a TDD engineer agent on a feature branch.
 ---
 ```
 
-**Body contains:** Instructions for validating prerequisite files (spec, implementation plan, codebase context), spawning the TDD engineer agent in an isolated git worktree to execute the implementation plan using strict red/green/refactor methodology, reporting results (branch, test counts, coverage, deviations), and updating pipeline state. Handles agent failure, missing summaries, and WIP commits.
+**Body contains:** Instructions for validating prerequisite files (spec, implementation plan, codebase context), spawning the TDD engineer agent to execute the implementation plan using strict red/green/refactor methodology on a feature branch, reporting results (branch, test counts, coverage, deviations), and updating pipeline state. Handles agent failure, missing summaries, and WIP commits.
 
 ### code_review/SKILL.md
 
@@ -196,11 +196,11 @@ description: >-
   Use when Stage 4 code review is approved and you are ready
   to open a PR. Generates a conventional-commit title, structured
   body with ticket link, spec summary, test results, and review
-  findings, then delegates to the gh-pr-tools pr_create skill.
+  findings, then creates the PR via gh CLI.
 ---
 ```
 
-**Body contains:** Instructions for validating that Stage 4 review is approved, gathering pipeline artifacts (impl summary, review summary, spec, test results), generating a conventional-commit PR title and structured body, previewing for user confirmation, delegating to `gh-pr-tools:pr_create` for the actual PR creation, applying labels, updating the source ticket status via MCP (Jira/Linear) or `gh` CLI (GitHub Issues), requesting reviewers from CODEOWNERS, and updating pipeline state. Ticket updates and reviewer requests are non-fatal.
+**Body contains:** Instructions for validating that Stage 4 review is approved, gathering pipeline artifacts (impl summary, review summary, spec, test results), generating a conventional-commit PR title and structured body, previewing for user confirmation, pushing the branch and creating the PR via `gh pr create`, applying labels, updating the source ticket status via MCP (Jira/Linear) or `gh` CLI (GitHub Issues), requesting reviewers from CODEOWNERS, and updating pipeline state. Ticket updates and reviewer requests are non-fatal.
 
 ---
 
@@ -249,16 +249,16 @@ Location: `plugins/full-orchestration/agents/tdd-engineer.agent.md`
 ```yaml
 ---
 name: TddEngineer
-description: 'Implements features using test-driven development in an isolated git worktree'
+description: 'Implements features using test-driven development on a feature branch'
 model: opus
 ---
 ```
 
-**Role:** Executes the implementation plan from Stage 2D using strict TDD methodology in an isolated git worktree. For each step: writes the failing test, runs it to confirm it fails, writes the implementation, runs the test to confirm it passes, then moves to the next step. Runs the full test suite at the end.
+**Role:** Executes the implementation plan from Stage 2D using strict TDD methodology on a feature branch. For each step: writes the failing test, runs it to confirm it fails, writes the implementation, runs the test to confirm it passes, then moves to the next step. Runs the full test suite at the end.
 
 **Tools used:** Read, Edit, Write (code changes), Bash (running tests, git operations), Grep, Glob (navigating the codebase).
 
-**Behavior:** Creates a new git worktree to isolate changes. Follows the implementation plan step by step. If a test fails unexpectedly, diagnoses and fixes before proceeding. Commits incrementally after each passing step. Reports back with a summary of all changes, test results, and any deviations from the plan.
+**Behavior:** Works on the current branch and follows the implementation plan step by step. If a test fails unexpectedly, diagnoses and fixes before proceeding. Commits incrementally after each passing step. Reports back with a summary of all changes, test results, and any deviations from the plan.
 
 ### maintainability-reviewer.agent.md
 

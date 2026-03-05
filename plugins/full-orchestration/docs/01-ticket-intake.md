@@ -19,7 +19,7 @@ This is the entry point to the pipeline. The user provides a ticket ID or URL, a
 
 ```yaml
 ---
-name: ticket-intake
+name: ticket_intake
 description: >-
   Fetch and parse a ticket from Jira, Linear, or GitHub Issues.
   Use when starting work on a ticket, beginning a new feature,
@@ -97,9 +97,9 @@ The skill produces a structured summary displayed to the user:
 - src/routes/api/v2/users.ts (endpoint under change)
 - tests/middleware/ (test directory)
 
----
-Proceed to Stage 2 (Spec & Design)? [Y/n]
 ```
+
+The user reviews the summary and can edit requirements, add context, or confirm.
 
 ## Error Handling
 

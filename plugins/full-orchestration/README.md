@@ -4,9 +4,9 @@ Fully agentic software engineering pipeline for Claude Code. Takes a ticket ID a
 
 ## Quick Start
 
-```bash
+```
 # Install the plugin
-claude plugin add ./plugins/full-orchestration
+/plugin install full-orchestration@ghcp-dev-plugin
 
 # Run the full pipeline
 /swe PROJ-123
@@ -18,9 +18,9 @@ claude plugin add ./plugins/full-orchestration
 |-------|------|-----|
 | 1. Ticket Intake | Fetch & parse requirements | MCP (Jira/Linear) or `gh` CLI |
 | 2. Spec & Design | Explore codebase, write spec, review | Team of explorer + architect + reviewer agents |
-| 3. TDD Implementation | Tests first, then implement | `tdd-engineer` agent in isolated worktree |
+| 3. TDD Implementation | Tests first, then implement | `tdd-engineer` agent on feature branch |
 | 4. Code Review | Multi-perspective adversarial review | Reuses `deep-review` plugin agents |
-| 5. PR Creation | Create PR, link ticket | Reuses `gh-pr-tools` plugin |
+| 5. PR Creation | Create PR, link ticket | `gh` CLI |
 
 Each stage has an approval gate — you review and confirm before proceeding.
 
@@ -50,4 +50,3 @@ Comprehensive documentation lives in [`docs/`](docs/):
 This plugin reuses existing plugins rather than duplicating functionality:
 
 - [`deep-review`](../deep_review/) — Stage 4 code review agents
-- [`gh-pr-tools`](../gh-pr-tools/) — Stage 5 PR creation
