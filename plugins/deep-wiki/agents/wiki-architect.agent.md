@@ -1,5 +1,5 @@
 ---
-name: wiki-architect
+name: WikiArchitect
 description: Technical documentation architect that analyzes repositories and generates structured wiki catalogues with onboarding guides
 model: sonnet
 ---

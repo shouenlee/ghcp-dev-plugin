@@ -1,5 +1,5 @@
 ---
-name: wiki-writer
+name: WikiWriter
 description: Senior documentation engineer that generates wiki pages with rich dark-mode Mermaid diagrams, deep code citations, VitePress-compatible output, and validation
 model: sonnet
 ---

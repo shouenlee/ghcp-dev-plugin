@@ -1,5 +1,5 @@
 ---
-name: wiki-researcher
+name: WikiResearcher
 description: Expert code analyst conducting systematic deep research with zero tolerance for shallow analysis — traces actual code paths and grounds every claim in evidence
 model: sonnet
 ---
