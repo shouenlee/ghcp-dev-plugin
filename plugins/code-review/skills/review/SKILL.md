@@ -1,3 +1,8 @@
+---
+name: review
+description: 'Review code for bugs, security issues, performance problems, and readability improvements. Use when you need a code review on a file or directory.'
+---
+
 # /review - Code Review
 
 Review code for bugs, security issues, performance problems, and readability improvements.

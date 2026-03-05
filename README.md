@@ -72,7 +72,7 @@ copilot plugin install deep-review@ghcp-dev-plugins
 /review                    # Review files changed in the working tree
 /review src/               # Review all files in a directory
 /lint                      # Run ruff + mypy + bandit on changed Python files
-/deep-review               # Adversarial multi-agent code review
+/deep_review               # Adversarial multi-agent code review
 ```
 
 ### Testing
@@ -84,7 +84,7 @@ copilot plugin install deep-review@ghcp-dev-plugins
 ### Git & PRs
 
 ```
-/commit-changes            # Smart commit splitting by logical concern
+/commit_changes            # Smart commit splitting by logical concern
 /pr-create                 # Create a PR from the current branch
 /pr-review 123             # Full code review of a pull request
 /pr-status 123             # Check review thread statuses

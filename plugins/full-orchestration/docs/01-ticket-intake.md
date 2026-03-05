@@ -57,10 +57,10 @@ description: >-
 The skill receives a single argument: the ticket identifier.
 
 ```
-/ticket-intake PROJ-123
-/ticket-intake https://myorg.atlassian.net/browse/PROJ-123
-/ticket-intake #42
-/ticket-intake https://github.com/org/repo/issues/42
+/ticket_intake PROJ-123
+/ticket_intake https://myorg.atlassian.net/browse/PROJ-123
+/ticket_intake #42
+/ticket_intake https://github.com/org/repo/issues/42
 ```
 
 When invoked via the orchestrator (`/swe PROJ-123`), the orchestrator passes the ticket ID to this skill as Stage 1.

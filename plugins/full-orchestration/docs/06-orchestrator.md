@@ -95,9 +95,9 @@ If the user requests changes at any gate, the orchestrator re-runs the current s
 Each stage can also be invoked as a standalone skill:
 
 ```
-/ticket-intake PROJ-123       # Stage 1 only
-/spec-writer                  # Stage 2 only (reads ticket state)
-/spec-review                  # Run just the review team on an existing spec
+/ticket_intake PROJ-123       # Stage 1 only
+/spec_writer                  # Stage 2 only (reads ticket state)
+/spec_review                  # Run just the review team on an existing spec
 ```
 
 When run standalone, stages read whatever state is available and produce their output without advancing the pipeline.
