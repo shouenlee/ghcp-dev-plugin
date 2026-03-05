@@ -19,8 +19,10 @@ plugins/full-orchestration/
 │   │   └── SKILL.md                         # Stage 2C/2E: review team
 │   ├── tdd_implement/
 │   │   └── SKILL.md                         # Stage 3: TDD implementation
-│   └── code_review/
-│       └── SKILL.md                         # Stage 4: code review
+│   ├── code_review/
+│   │   └── SKILL.md                         # Stage 4: code review
+│   └── pr_create/
+│       └── SKILL.md                         # Stage 5: PR creation
 ├── agents/
 │   ├── spec-architect.agent.md              # Stage 2B: spec generation
 │   ├── impl-planner.agent.md               # Stage 2D: implementation planning
@@ -181,6 +183,24 @@ description: >-
 ```
 
 **Body contains:** Instructions for validating that Stage 3 is complete, checking out the feature branch and invoking `/deep_review` (which gathers its own diff context) for parallel three-agent analysis (Advocate, Skeptic, Architect), mapping findings to four severity levels (Critical/Major/Minor/Suggestion), presenting findings to the user, auto-fixing minor issues, escalating major and critical issues for user decision, spawning the TDD engineer for accepted fixes, iterating up to 3 times, and gating approval before Stage 5.
+
+### pr_create/SKILL.md
+
+Location: `plugins/full-orchestration/skills/pr_create/SKILL.md`
+
+```yaml
+---
+name: pr_create
+description: >-
+  Create a pull request from a reviewed implementation branch.
+  Use when Stage 4 code review is approved and you are ready
+  to open a PR. Generates a conventional-commit title, structured
+  body with ticket link, spec summary, test results, and review
+  findings, then delegates to the gh-pr-tools pr_create skill.
+---
+```
+
+**Body contains:** Instructions for validating that Stage 4 review is approved, gathering pipeline artifacts (impl summary, review summary, spec, test results), generating a conventional-commit PR title and structured body, previewing for user confirmation, delegating to `gh-pr-tools:pr_create` for the actual PR creation, applying labels, updating the source ticket status via MCP (Jira/Linear) or `gh` CLI (GitHub Issues), requesting reviewers from CODEOWNERS, and updating pipeline state. Ticket updates and reviewer requests are non-fatal.
 
 ---
 

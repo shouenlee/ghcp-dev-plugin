@@ -190,15 +190,20 @@ Write the final summary to `.claude/swe-state/{ticket-id}/review-summary.md`.
 
 ## Phase 4: Update Pipeline State
 
-Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results:
+Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved` based on the user's choice in Phase 3:
+
+- **Approve** → `"approved": true`, `"status": "approved"`
+- **Continue manually** → `"approved": false`, `"status": "manual"`
+- **Abort** → `"approved": false`, `"status": "aborted"`
 
 ```json
 {
   "current_stage": "review",
-  "status": "awaiting_approval",
+  "status": "approved",
   "stages": {
     "review": {
       "completed": true,
+      "approved": true,
       "iterations": 0,
       "branch": "feat/{ticket-id}-{short-description}",
       "findings": {
@@ -206,8 +211,7 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results:
         "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },
         "minor": { "total": 0, "fixed": 0 },
         "suggestions": 0
-      },
-      "approved": false
+      }
     }
   }
 }

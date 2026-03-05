@@ -249,6 +249,32 @@ Say "approved" to proceed to implementation.
 
 ---
 
+## Update Pipeline State
+
+After the user approves the implementation plan (end of Sub-stage 2E), update `.claude/swe-state/{ticket-id}.json`:
+
+```json
+{
+  "current_stage": "spec",
+  "status": "awaiting_approval",
+  "stages": {
+    "spec": {
+      "completed": true,
+      "spec_file": ".claude/specs/{ticket-id}.md",
+      "impl_plan_file": ".claude/specs/{ticket-id}-impl.md",
+      "context_file": ".claude/specs/{ticket-id}-context.md",
+      "explorers_run": 0,
+      "spec_review_iterations": 0,
+      "plan_review_iterations": 0
+    }
+  }
+}
+```
+
+Read the existing state file first and merge — do not overwrite prior stage data (e.g., `stages.intake`).
+
+---
+
 ## Error Handling
 
 - **Agent failure**: Offer to re-spawn the failed agent or proceed without it
