@@ -22,10 +22,11 @@ Their agreement signals confidence.
 ## Usage
 
 ```
-/deep_review                    # Review uncommitted local changes
-/deep_review <PR-ID>            # Review a pull request
-/deep_review <commit>           # Review a specific commit
-/deep_review <file1> <file2>    # Review specific files
+/deep_review                                        # Review uncommitted local changes
+/deep_review <PR-ID>                                # Review a pull request
+/deep_review <commit>                               # Review a specific commit
+/deep_review <file1> <file2>                        # Review specific files
+/deep_review --base=main --head=feat/PROJ-123       # Review branch diff
 ```
 
 ---
@@ -54,11 +55,13 @@ Phase 3: SYNTHESIS (you, the orchestrator)
 
 ### 1.1 Identify the Changes
 
-Determine what's being reviewed:
-- PR/MR from a remote repository
-- Local uncommitted changes
-- Specific commits
-- Files provided by user
+Determine what's being reviewed based on arguments:
+
+- `--base` and `--head` flags → Branch diff: `git diff {base}...{head}` and `git log {base}...{head}`
+- PR/MR identifier → Remote pull request
+- Commit hash → Specific commit
+- File paths → Named files
+- No arguments → Local uncommitted changes
 
 Use project-specific tools if available (check project CLAUDE.md).
 Fall back to git commands: `git diff`, `git show`, `git log`.
@@ -78,8 +81,10 @@ Do NOT create temp files in the source directory being reviewed.
 
 ```yaml
 review:
-  type: pr | local | commit | files
+  type: pr | local | commit | files | branch_diff
   id: <identifier if applicable>
+  base: <base branch, if branch_diff>
+  head: <head branch, if branch_diff>
   title: <summary>
   description: <details>
 
@@ -243,7 +248,40 @@ The user needs to know where the review is strong and where it's thin.
 <what was reviewed, what was skipped, confidence level>
 ```
 
-### 3.6 Cleanup (Always)
+### 3.6 Structured Findings Block
+
+After the human-readable final review, append a machine-readable findings block. This enables downstream tools (e.g., `code_review`) to parse findings programmatically.
+
+````markdown
+<!-- structured-findings
+findings:
+  - id: 1
+    priority: critical | high | medium | low
+    file: <relative path>
+    line: <line number or null>
+    summary: "<one-line description>"
+    agents: [advocate | skeptic | architect]
+  - id: 2
+    ...
+structured-findings -->
+````
+
+Each finding in the consolidated review MUST have a corresponding entry in this block. The `agents` field lists which agents flagged the finding. The `priority` field uses the same levels as the human-readable review.
+
+#### Schema Contract
+
+This schema is a contract between `deep_review` (producer) and `code_review` (consumer). Changes must be synchronized across both plugins.
+
+| Field | Type | Allowed Values |
+|---|---|---|
+| `id` | integer | Sequential from 1 |
+| `priority` | string | `critical`, `high`, `medium`, `low` |
+| `file` | string | Relative path from repo root |
+| `line` | integer or null | Line number, or null if not applicable |
+| `summary` | string | One-line description of the finding |
+| `agents` | list of strings | `advocate`, `skeptic`, `architect` |
+
+### 3.7 Cleanup (Always)
 
 Delete the context file regardless of outcome:
 
