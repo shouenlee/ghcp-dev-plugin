@@ -24,13 +24,13 @@ plugins/full-orchestration/
 │   └── pr_create/
 │       └── SKILL.md                         # Stage 5: PR creation
 ├── agents/
-│   ├── spec-architect.agent.md              # Stage 2B: spec generation
-│   ├── impl-planner.agent.md               # Stage 2D: implementation planning
-│   ├── tdd-engineer.agent.md               # Stage 3: TDD implementation
-│   ├── maintainability-reviewer.agent.md   # Reviewer: maintainability
-│   ├── security-reviewer.agent.md          # Reviewer: security
-│   ├── efficiency-reviewer.agent.md        # Reviewer: performance
-│   └── completeness-reviewer.agent.md      # Reviewer: completeness
+│   ├── SpecArchitect.agent.md               # Stage 2B: spec generation
+│   ├── ImplPlanner.agent.md                # Stage 2D: implementation planning
+│   ├── TddEngineer.agent.md               # Stage 3: TDD implementation
+│   ├── MaintainabilityReviewer.agent.md    # Reviewer: maintainability
+│   ├── SecurityReviewer.agent.md           # Reviewer: security
+│   ├── EfficiencyReviewer.agent.md         # Reviewer: performance
+│   └── CompletenessReviewer.agent.md       # Reviewer: completeness
 ├── hooks.json                               # Event-based suggestions
 ├── docs/                                    # Documentation (this directory)
 └── README.md                                # Plugin overview
@@ -94,7 +94,7 @@ description: >-
 ---
 ```
 
-**Body contains:** The full orchestration logic — argument parsing (`--from=STAGE`, `--skip-review`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
+**Body contains:** The full orchestration logic — argument parsing (`--from=STAGE`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
 
 ### ticket_intake/SKILL.md
 
@@ -206,9 +206,9 @@ description: >-
 
 ## Agents
 
-### spec-architect.agent.md
+### SpecArchitect.agent.md
 
-Location: `plugins/full-orchestration/agents/spec-architect.agent.md`
+Location: `plugins/full-orchestration/agents/SpecArchitect.agent.md`
 
 ```yaml
 ---
@@ -224,9 +224,9 @@ model: opus
 
 **Behavior:** Prioritizes clarity and completeness. Explicitly calls out assumptions, risks, and open questions. Structures the spec so reviewers can evaluate each section independently.
 
-### impl-planner.agent.md
+### ImplPlanner.agent.md
 
-Location: `plugins/full-orchestration/agents/impl-planner.agent.md`
+Location: `plugins/full-orchestration/agents/ImplPlanner.agent.md`
 
 ```yaml
 ---
@@ -242,9 +242,9 @@ model: opus
 
 **Behavior:** Produces steps ordered for TDD — each step starts with the test, then the implementation. Follows existing code conventions discovered during exploration. Keeps steps small enough for incremental verification.
 
-### tdd-engineer.agent.md
+### TddEngineer.agent.md
 
-Location: `plugins/full-orchestration/agents/tdd-engineer.agent.md`
+Location: `plugins/full-orchestration/agents/TddEngineer.agent.md`
 
 ```yaml
 ---
@@ -260,9 +260,9 @@ model: opus
 
 **Behavior:** Works on the current branch and follows the implementation plan step by step. If a test fails unexpectedly, diagnoses and fixes before proceeding. Commits incrementally after each passing step. Reports back with a summary of all changes, test results, and any deviations from the plan.
 
-### maintainability-reviewer.agent.md
+### MaintainabilityReviewer.agent.md
 
-Location: `plugins/full-orchestration/agents/maintainability-reviewer.agent.md`
+Location: `plugins/full-orchestration/agents/MaintainabilityReviewer.agent.md`
 
 ```yaml
 ---
@@ -278,9 +278,9 @@ model: sonnet
 
 **Behavior:** Produces a structured review with findings rated by severity (critical, warning, suggestion). Focuses on whether the proposed changes will be easy to understand, modify, and debug six months from now.
 
-### security-reviewer.agent.md
+### SecurityReviewer.agent.md
 
-Location: `plugins/full-orchestration/agents/security-reviewer.agent.md`
+Location: `plugins/full-orchestration/agents/SecurityReviewer.agent.md`
 
 ```yaml
 ---
@@ -296,9 +296,9 @@ model: sonnet
 
 **Behavior:** Produces a structured review with findings rated by severity. Focuses on attack surface changes introduced by the proposed design. References OWASP categories where applicable.
 
-### efficiency-reviewer.agent.md
+### EfficiencyReviewer.agent.md
 
-Location: `plugins/full-orchestration/agents/efficiency-reviewer.agent.md`
+Location: `plugins/full-orchestration/agents/EfficiencyReviewer.agent.md`
 
 ```yaml
 ---
@@ -314,9 +314,9 @@ model: sonnet
 
 **Behavior:** Produces a structured review with findings rated by severity. Focuses on whether the proposed approach will perform acceptably at expected scale. Suggests concrete alternatives for identified bottlenecks.
 
-### completeness-reviewer.agent.md
+### CompletenessReviewer.agent.md
 
-Location: `plugins/full-orchestration/agents/completeness-reviewer.agent.md`
+Location: `plugins/full-orchestration/agents/CompletenessReviewer.agent.md`
 
 ```yaml
 ---

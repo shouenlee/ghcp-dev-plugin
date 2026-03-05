@@ -303,12 +303,12 @@ The following agents are needed for Stage 2:
 
 | Agent | File | Description |
 |---|---|---|
-| `spec-architect` | `agents/spec-architect.agent.md` | Reads ticket requirements and codebase context to produce the high-level technical spec. Focuses on the "what and why" — requirements, affected components, approach, risks, and open questions. |
-| `impl-planner` | `agents/impl-planner.agent.md` | Reads the approved spec and codebase context to produce the detailed implementation doc. Focuses on the "exactly how" — file paths with line ranges, function signatures, test cases with inputs/outputs, and step-by-step implementation order. |
-| `maintainability-reviewer` | `agents/maintainability-reviewer.agent.md` | Reviews specs and implementation docs for long-term sustainability, tech debt introduction, pattern consistency, and adherence to codebase conventions. |
-| `security-reviewer` | `agents/security-reviewer.agent.md` | Reviews for injection risks, auth gaps, data exposure, OWASP Top 10 compliance, and missing input validation. |
-| `efficiency-reviewer` | `agents/efficiency-reviewer.agent.md` | Reviews for N+1 queries, memory usage, unnecessary computation, scalability concerns, and missing caching or indexing. |
-| `completeness-reviewer` | `agents/completeness-reviewer.agent.md` | Reviews for missing edge cases, uncovered acceptance criteria, ambiguities, error handling gaps, and rollback coverage. |
+| `SpecArchitect` | `agents/SpecArchitect.agent.md` | Reads ticket requirements and codebase context to produce the high-level technical spec. Focuses on the "what and why" — requirements, affected components, approach, risks, and open questions. |
+| `ImplPlanner` | `agents/ImplPlanner.agent.md` | Reads the approved spec and codebase context to produce the detailed implementation doc. Focuses on the "exactly how" — file paths with line ranges, function signatures, test cases with inputs/outputs, and step-by-step implementation order. |
+| `MaintainabilityReviewer` | `agents/MaintainabilityReviewer.agent.md` | Reviews specs and implementation docs for long-term sustainability, tech debt introduction, pattern consistency, and adherence to codebase conventions. |
+| `SecurityReviewer` | `agents/SecurityReviewer.agent.md` | Reviews for injection risks, auth gaps, data exposure, OWASP Top 10 compliance, and missing input validation. |
+| `EfficiencyReviewer` | `agents/EfficiencyReviewer.agent.md` | Reviews for N+1 queries, memory usage, unnecessary computation, scalability concerns, and missing caching or indexing. |
+| `CompletenessReviewer` | `agents/CompletenessReviewer.agent.md` | Reviews for missing edge cases, uncovered acceptance criteria, ambiguities, error handling gaps, and rollback coverage. |
 
 ---
 

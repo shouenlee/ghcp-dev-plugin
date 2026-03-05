@@ -42,7 +42,7 @@ Comprehensive documentation lives in [`docs/`](docs/):
 ## Plugin Components
 
 - **Skills:** `swe` (orchestrator), `ticket_intake`, `spec_writer`, `spec_review`
-- **Agents:** `spec-architect`, `impl-planner`, `tdd-engineer`, `maintainability-reviewer`, `security-reviewer`, `efficiency-reviewer`, `completeness-reviewer`
+- **Agents:** `SpecArchitect`, `ImplPlanner`, `TddEngineer`, `MaintainabilityReviewer`, `SecurityReviewer`, `EfficiencyReviewer`, `CompletenessReviewer`
 - **Hooks:** Contextual suggestions for ticket and commit workflows
 
 ## Dependencies

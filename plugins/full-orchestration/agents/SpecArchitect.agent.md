@@ -56,7 +56,7 @@ Write the spec to `.claude/specs/{ticket-id}.md` using this structure:
 ```markdown
 # Technical Spec: {ticket-title}
 **Ticket:** {ticket-id}
-**Author:** spec-architect agent
+**Author:** SpecArchitect agent
 **Status:** Draft
 
 ## 1. Requirements Summary

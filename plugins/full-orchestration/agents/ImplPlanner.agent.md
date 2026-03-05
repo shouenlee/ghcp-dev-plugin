@@ -59,7 +59,7 @@ Write the implementation plan to `.claude/specs/{ticket-id}-impl.md` using this 
 # Implementation Plan: {ticket-title}
 **Ticket:** {ticket-id}
 **Spec:** .claude/specs/{ticket-id}.md
-**Author:** impl-planner agent
+**Author:** ImplPlanner agent
 
 ## 1. File Changes
 
