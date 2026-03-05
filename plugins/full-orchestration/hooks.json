@@ -1,0 +1,16 @@
+{
+  "hooks": [
+    {
+      "event": "after_command",
+      "pattern": "^gh issue view",
+      "action": "suggest",
+      "message": "Tip: Use /swe to start the full software engineering pipeline for this ticket."
+    },
+    {
+      "event": "after_edit",
+      "pattern": "\\.(py|js|ts|go|rs|java|rb)$",
+      "action": "suggest",
+      "message": "Source file modified. Run tests to verify your changes."
+    }
+  ]
+}

@@ -26,7 +26,7 @@ This is the most critical stage in the pipeline. A thorough spec prevents wasted
 
 ## Options Comparison
 
-| Criteria | A: Reuse `design-doc` plugin | B: Custom `spec-writer` agent | C: Team approach (researcher + architect) |
+| Criteria | A: Reuse `design-doc` plugin | B: Custom `spec_writer` agent | C: Team approach (researcher + architect) |
 |---|---|---|---|
 | **Implementation effort** | Low — already exists | Medium — new skill + agents | High — coordination logic |
 | **Spec depth** | Generic design doc | Tailored to implementation needs | Deepest exploration |
@@ -35,7 +35,7 @@ This is the most critical stage in the pipeline. A thorough spec prevents wasted
 | **User experience** | Familiar format | Structured approval flow | Complex, many interactions |
 | **Recommendation** | Fallback option | **RECOMMENDED** | Over-engineered for most tasks |
 
-**Decision:** Option B — custom `spec-writer` skill with `spec-architect` and `impl-planner` agents, using Option A as a fallback for simpler tickets. The multi-explorer approach from Option C is incorporated into sub-stage 2A within Option B's flow.
+**Decision:** Option B — custom `spec_writer` skill with `spec-architect` and `impl-planner` agents, using Option A as a fallback for simpler tickets. The multi-explorer approach from Option C is incorporated into sub-stage 2A within Option B's flow.
 
 ---
 
@@ -57,7 +57,7 @@ Before writing any spec, the pipeline builds a comprehensive understanding of th
 
 #### Agent Selection
 
-Not every ticket needs all five explorers. The `spec-writer` skill selects agents based on ticket labels and content:
+Not every ticket needs all five explorers. The `spec_writer` skill selects agents based on ticket labels and content:
 
 - **Bug fix:** Entity Explorer + Test Explorer + Pattern Explorer (3 agents)
 - **New feature:** All 5 agents
@@ -316,8 +316,8 @@ The following agents are needed for Stage 2:
 
 | Skill | File | Description |
 |---|---|---|
-| `spec-writer` | `skills/spec-writer/SKILL.md` | Orchestrates the full 2A-2E flow: spawns explorer agents, generates spec via `spec-architect`, runs review team, generates implementation doc via `impl-planner`, runs final review. Manages user approval gates between sub-stages. |
-| `spec-review` | `skills/spec-review/SKILL.md` | Runs the 4-agent review team on any document (spec or implementation doc). Can be invoked independently to re-review after changes. Produces consolidated review with severity ratings. |
+| `spec_writer` | `skills/spec_writer/SKILL.md` | Orchestrates the full 2A-2E flow: spawns explorer agents, generates spec via `spec-architect`, runs review team, generates implementation doc via `impl-planner`, runs final review. Manages user approval gates between sub-stages. |
+| `spec_review` | `skills/spec_review/SKILL.md` | Runs the 4-agent review team on any document (spec or implementation doc). Can be invoked independently to re-review after changes. Produces consolidated review with severity ratings. |
 
 ---
 
@@ -386,6 +386,13 @@ Every agent's inputs must exist before it runs. The table below traces each step
 | — | Final user approval gate | `{ticket-id}-review-impl.md` | 2E | — |
 
 The flow is strictly sequential (2A → 2B → 2C → 2D → 2E) with user approval gates between each step, so no agent runs before its inputs exist. Within 2A and 2C/2E, agents run in parallel but share no write dependencies — explorers produce independent output sections, and reviewers produce independent reviews consolidated by the orchestrator after all complete.
+
+### Stage 3: TDD Implementation
+
+| Step | Component | Inputs Required | Produced By | Output File |
+|---|---|---|---|---|
+| 3A | TddEngineer | `{ticket-id}.md`, `{ticket-id}-impl.md`, `{ticket-id}-context.md` | Stage 2 (2B, 2D, 2A) | Feature branch `feat/{ticket-id}-{desc}` |
+| 3B | TddEngineer (summary) | All TDD steps complete | TddEngineer agent | `.claude/swe-state/{ticket-id}/impl-summary.md` |
 
 ---
 
