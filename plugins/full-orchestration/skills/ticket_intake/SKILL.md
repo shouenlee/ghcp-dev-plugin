@@ -249,10 +249,16 @@ Read the existing state file first if it exists and merge — do not overwrite p
 
 ---
 
+## Standalone Usage
+
+When invoked directly (not via `/swe`), this skill produces ticket data only. The pipeline state file will **not** contain `target_branch` or `feature_branch` fields — those are set by the `/swe` orchestrator during pipeline initialization. To run the full pipeline, use `/swe {ticket-id}`.
+
+---
+
 ## Artifacts Produced
 
 | File | Contents |
 |---|---|
 | `.claude/swe-state/{ticket-id}/ticket.json` | Structured ticket data with all extracted fields |
-| `.claude/swe-state/{ticket-id}.json` | Pipeline state with `stages.intake.completed = true` |
+| `.claude/swe-state/{ticket-id}.json` | Pipeline state with `stages.intake.completed = true` (partial — see Standalone Usage) |
 

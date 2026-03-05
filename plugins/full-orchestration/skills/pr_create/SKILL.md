@@ -43,7 +43,7 @@ Run /code_review {ticket-id} to complete review first.
 ## Phase 1: Validate Inputs
 
 1. Read `.claude/swe-state/{ticket-id}.json`
-2. Extract the **feature branch name** from `stages.implement.branch`
+2. Extract the **feature branch name** from `feature_branch` (top-level field)
 3. Extract the **target branch** from `target_branch` in the state file (default: `main` if not set)
 4. Extract **ticket data**: ticket ID, ticket URL, ticketing system (jira/linear/github)
 5. Read `.claude/swe-state/{ticket-id}/impl-summary.md` — extract test results, changes list

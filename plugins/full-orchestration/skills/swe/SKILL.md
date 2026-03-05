@@ -21,7 +21,6 @@ You give it a ticket ID. It gives you a reviewed PR.
 /swe PROJ-123
 /swe https://github.com/org/repo/issues/42
 /swe PROJ-123 --from=implement
-/swe PROJ-123 --skip-review
 ```
 
 ---
@@ -40,7 +39,6 @@ Parse the first positional argument:
 | Flag | Type | Effect |
 |------|------|--------|
 | `--from=STAGE` | string | Resume from a specific stage. Valid values: `intake`, `spec`, `implement`, `review`, `pr`. |
-| `--skip-review` | boolean | Skip Stage 4 (Code Review). Jump from Stage 3 directly to Stage 5. |
 
 ### Validate
 
@@ -61,12 +59,38 @@ gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
 
 If `gh` is unavailable, fall back to checking `git symbolic-ref refs/remotes/origin/HEAD` or default to `main`.
 
+### Ensure Feature Branch
+
+Check the current branch:
+
+```bash
+current=$(git branch --show-current)
+```
+
+Compare `current` against the detected target branch. If they are the same (e.g., both `main`), create a feature branch with user confirmation:
+
+```
+You are currently on the target branch ({target_branch}).
+I'll create and switch to a feature branch:
+
+  git checkout -b feat/{ticket-id}
+
+Proceed? (yes/no)
+```
+
+If the user confirms, run `git checkout -b feat/{ticket-id}` and record the new branch. If the user declines, stop and let them create their own branch.
+
+If the user is already on a non-target branch, use that as the feature branch.
+
+### Create State File
+
 Create `.claude/swe-state/{ticket-id}.json`:
 
 ```json
 {
   "ticket_id": "{ticket-id}",
   "target_branch": "{detected-default-branch}",
+  "feature_branch": "{current-or-created-branch}",
   "current_stage": "intake",
   "status": "in_progress",
   "stages": {
@@ -101,32 +125,7 @@ The full pipeline runs 5 stages in order:
 intake → spec → implement → review → pr
 ```
 
-Flags modify the sequence:
-- `--skip-review` removes `review` from the sequence
-- `--from=STAGE` sets the starting stage (all prior stages must be completed)
-
-### Pre-Stage Validation
-
-Before dispatching the `implement` stage, verify the user is on a feature branch:
-
-```bash
-current=$(git branch --show-current)
-```
-
-Compare `current` against `target_branch` from the state file. If they are the same (e.g., both `main`), stop and tell the user:
-
-```
-You are currently on the target branch ({target_branch}).
-Stage 3 will commit directly to this branch, which is not recommended.
-
-Create a feature branch first:
-  git checkout -b feat/{ticket-id}
-
-Then resume:
-  /swe {ticket-id} --from=implement
-```
-
-Do NOT proceed to Stage 3 if the current branch is the target branch.
+`--from=STAGE` sets the starting stage (all prior stages must be completed).
 
 ### Dispatch
 
@@ -179,7 +178,7 @@ Starting from the determined start stage, for each stage in the sequence:
 
 ---
 
-## Phase 5: Completion
+## Phase 4: Completion
 
 When all stages have completed (Stage 5 finishes), display the final summary:
 
@@ -234,11 +233,12 @@ The orchestrator reads and writes `.claude/swe-state/{ticket-id}.json`. Every wr
       "completed": true,
       "spec_file": ".claude/specs/PROJ-123.md",
       "impl_plan_file": ".claude/specs/PROJ-123-impl.md",
-      "context_file": ".claude/specs/PROJ-123-context.md"
+      "context_file": ".claude/specs/PROJ-123-context.md",
+      "spec_review_file": ".claude/specs/PROJ-123-review-spec.md",
+      "impl_review_file": ".claude/specs/PROJ-123-review-impl.md"
     },
     "implement": {
       "completed": false,
-      "branch": null,
       "test_results": null
     },
     "review": {
@@ -266,6 +266,8 @@ The orchestrator reads and writes `.claude/swe-state/{ticket-id}.json`. Every wr
 | `failed` | A stage encountered an error |
 | `aborted` | User chose to abort at a gate |
 | `completed` | All stages finished successfully |
+
+**Note:** The `code_review` skill manages the Stage 3 ↔ Stage 4 iterate loop internally. When the user chooses "Iterate" at the review gate, `code_review` re-invokes `/tdd_implement` itself, waits for completion, then re-enters the review cycle. The orchestrator waits for `code_review` to return with a final result (`approved` or `aborted`).
 
 ### State Reads/Writes by Stage
 

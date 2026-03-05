@@ -86,7 +86,6 @@ If the user aborts within a stage, the skill reports the abort and the orchestra
 | Argument | Effect |
 |----------|--------|
 | `--from=STAGE` | Resume from a specific stage. Valid values: `intake`, `spec`, `implement`, `review`, `pr`. Reads saved state from the previous stages. |
-| `--skip-review` | Skip Stage 4 code review. Proceeds directly from Stage 3 to Stage 5. |
 
 ### Running Individual Stages
 
@@ -171,7 +170,7 @@ The orchestrator passes data between stages through the state file. Each stage r
       "spec_review_iterations": 1,
       "plan_review_iterations": 1
     },
-    "implement": { "completed": false, "branch": null, "test_results": null },
+    "implement": { "completed": false, "test_results": null },
     "review": { "completed": false, "approved": false, "iterations": 0, "findings": null },
     "pr": { "completed": false, "pr_number": null, "pr_url": null }
   }

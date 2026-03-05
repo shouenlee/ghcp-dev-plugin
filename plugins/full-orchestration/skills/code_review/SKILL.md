@@ -41,7 +41,7 @@ Run /tdd_implement {ticket-id} to complete implementation first.
 ## Phase 1: Validate Inputs
 
 1. Read `.claude/swe-state/{ticket-id}.json`
-2. Extract the **feature branch name** from `stages.implement.branch` in the state file
+2. Extract the **feature branch name** from `feature_branch` in the state file (top-level field)
 3. Extract the **target branch** from `target_branch` in the state file (default: `main` if not set)
 4. Verify the feature branch exists: `git branch --list <branch>`
 5. Report to the user:
@@ -71,9 +71,13 @@ If the diff is empty, skip review and proceed directly to the approval gate.
 
 ### 2.2 Invoke Deep Review
 
-Ensure the feature branch is checked out, then invoke `/deep_review` with no arguments. The deep-review plugin will detect the current branch, gather the diff against the target branch on its own, spawn three parallel agents (Advocate, Skeptic, Architect), and produce a consolidated review.
+Invoke `/deep_review` with branch arguments so it diffs the feature branch against the target:
 
-Do NOT pass a pre-generated diff — let deep-review handle context gathering internally.
+```
+/deep_review --base={target-branch} --head={feature-branch}
+```
+
+The deep-review plugin will generate the diff via `git diff {base}...{head}`, spawn three parallel agents (Advocate, Skeptic, Architect), and produce a consolidated review with a structured findings block.
 
 If `/deep_review` is not available (plugin not installed), stop and tell the user:
 
@@ -88,6 +92,21 @@ Then re-run: /code_review {ticket-id}
 
 ### 2.3 Map Findings to Severity
 
+Parse the `<!-- structured-findings ... -->` block from the deep-review output. Each finding has fields defined by the schema contract below.
+
+#### Schema Contract
+
+This schema is a contract between `deep_review` (producer) and `code_review` (consumer). Changes must be synchronized across both plugins.
+
+| Field | Type | Allowed Values |
+|---|---|---|
+| `id` | integer | Sequential from 1 |
+| `priority` | string | `critical`, `high`, `medium`, `low` |
+| `file` | string | Relative path from repo root |
+| `line` | integer or null | Line number, or null if not applicable |
+| `summary` | string | One-line description of the finding |
+| `agents` | list of strings | `advocate`, `skeptic`, `architect` |
+
 Map `deep-review` priority levels to the pipeline severity system:
 
 | deep-review Priority | Pipeline Severity | Action |
@@ -96,6 +115,8 @@ Map `deep-review` priority levels to the pipeline severity system:
 | **High** | **Major** | User decides: fix, defer, or dismiss |
 | **Medium** | **Minor** | Auto-fix when possible |
 | **Low** | **Suggestion** | Collect for follow-up items |
+
+If the structured findings block is missing (e.g., older deep-review version), fall back to extracting priorities from the markdown `**Priority**: ...` lines in the Consolidated Findings section.
 
 ### 2.4 Present Findings
 
@@ -191,8 +212,7 @@ Proceeding is not recommended.
 
 Ask the user to choose:
 - **Approve** — proceed to Stage 5 (PR creation)
-- **Iterate** — reset `stages.implement.completed = false` in `.claude/swe-state/{ticket-id}.json`, then re-invoke `/tdd_implement {ticket-id}` to rework the implementation. After Stage 3 completes again, return to the review loop (Phase 2) for re-review.
-- **Continue manually** — exit the skill; user handles remaining issues
+- **Iterate** — spawn the TDD engineer directly with the review findings (see Iterate below). After the engineer completes, return to the review loop (Phase 2) for re-review. This loop is managed entirely within `code_review` — the orchestrator is not involved until `code_review` returns.
 - **Abort** — stop the pipeline for this ticket
 
 Write the final summary to `.claude/swe-state/{ticket-id}/review-summary.md`.
@@ -204,8 +224,43 @@ Write the final summary to `.claude/swe-state/{ticket-id}/review-summary.md`.
 Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved` based on the user's choice in Phase 3:
 
 - **Approve** → `"approved": true`, `"status": "approved"`
-- **Iterate** → do not update Stage 4 state yet; reset `stages.implement.completed = false`, re-invoke `/tdd_implement`, then loop back to Phase 2
-- **Continue manually** → `"approved": false`, `"status": "manual"`
+- **Iterate** → do not update Stage 4 state yet. Spawn the TDD engineer with review findings (see below), then loop back to Phase 2. The orchestrator is not involved — `code_review` manages this loop internally.
+
+### Iterate: Spawn TDD Engineer with Review Findings
+
+Spawn the TDD engineer directly with both the original context and the review findings in the prompt:
+
+```
+subagent_type: full-orchestration:TddEngineer
+prompt: |
+  You are the TDD ENGINEER continuing a previous implementation.
+
+  Your original inputs:
+    Technical spec:       .claude/specs/{ticket-id}.md
+    Implementation plan:  .claude/specs/{ticket-id}-impl.md
+    Codebase context:     .claude/specs/{ticket-id}-context.md
+
+  Code review feedback to address:
+
+  ## Critical
+  - {finding} — {file}:{line}
+
+  ## Major
+  - {finding} — {file}:{line}
+
+  Address each finding while keeping all existing tests passing.
+  Do NOT re-implement completed work — only fix the identified issues
+  using TDD (write/update tests first, then fix).
+
+  Work on the current branch. Do NOT create or switch branches.
+  Commit after each fix: "review: fix {severity} — {short description}"
+  Run the full test suite when all fixes are complete.
+
+  Write the implementation summary to: .claude/swe-state/{ticket-id}/impl-summary.md
+```
+
+Wait for the agent to complete, then return to Phase 2 for re-review.
+
 - **Abort** → `"approved": false`, `"status": "aborted"`
 
 ```json
@@ -217,7 +272,6 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved`
       "completed": true,
       "approved": true,
       "iterations": 0,
-      "branch": "{current-branch}",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
         "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },

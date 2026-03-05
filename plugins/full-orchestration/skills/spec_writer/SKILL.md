@@ -260,6 +260,8 @@ After the user approves the implementation plan (end of Sub-stage 2E), update `.
       "spec_file": ".claude/specs/{ticket-id}.md",
       "impl_plan_file": ".claude/specs/{ticket-id}-impl.md",
       "context_file": ".claude/specs/{ticket-id}-context.md",
+      "spec_review_file": ".claude/specs/{ticket-id}-review-spec.md",
+      "impl_review_file": ".claude/specs/{ticket-id}-review-impl.md",
       "explorers_run": 0,
       "spec_review_iterations": 0,
       "plan_review_iterations": 0

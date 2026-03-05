@@ -45,8 +45,9 @@ Run /spec_writer {ticket-id} to generate these files first.
 1. Read `.claude/specs/{ticket-id}-impl.md`
 2. Extract the step count from Section 6 (Implementation Order)
 3. Detect the primary language from the implementation plan
-4. Record the current branch name: `git branch --show-current`
-5. Report to the user:
+4. Read `.claude/swe-state/{ticket-id}.json` and extract `feature_branch` (top-level field)
+5. Confirm the current branch matches `feature_branch`: `git branch --show-current`. If they differ, warn the user and offer to switch.
+6. Report to the user:
 
 ```
 TDD Implementation: {ticket-id}
@@ -89,7 +90,8 @@ Wait for the agent to complete.
 ## Phase 3: Report Results
 
 1. Read `.claude/swe-state/{ticket-id}/impl-summary.md`
-2. Report to the user:
+2. Extract the overall test suite result (`PASS` or `FAIL`) from the summary.
+3. Report to the user:
 
 ```
 TDD Implementation Complete: {ticket-id}
@@ -100,9 +102,26 @@ Coverage: {X%} (if available)
 
 Deviations from plan:
   {deviations or "None"}
-
-The implementation is ready for code review.
 ```
+
+### On PASS
+
+Proceed to Phase 4.
+
+### On FAIL
+
+Do **not** proceed to Phase 4. Do **not** mark the stage as completed. Report the failure:
+
+```
+Stage 3 (TDD Implementation) failed: tests did not pass after implementation.
+
+{test failure details from impl-summary}
+
+Pipeline state saved. Resume with:
+  /swe {ticket-id} --from=implement
+```
+
+Return the error to the orchestrator so it can save state with `status: "failed"`.
 
 ---
 
@@ -113,10 +132,10 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 3 results:
 ```json
 {
   "current_stage": "implement",
+  "feature_branch": "{current-branch}",
   "stages": {
     "implement": {
       "completed": true,
-      "branch": "{current-branch}",
       "test_results": {
         "new_tests": 0,
         "modified_tests": 0,

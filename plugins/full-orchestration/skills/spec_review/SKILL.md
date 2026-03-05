@@ -51,7 +51,15 @@ The argument is a path to the document to review. Detect the type:
 - **Spec**: path matches `{ticket-id}.md` (not `-impl.md`, not `-context.md`, not `-review-*.md`)
 - **Impl plan**: path matches `{ticket-id}-impl.md`
 
-Extract `{ticket-id}` from the filename.
+Extract `{ticket-id}` from the filename. Supported ticket ID formats:
+
+| Pattern | System | Example Filename |
+|---|---|---|
+| `[A-Z]+-\d+` | Jira | `PROJ-123.md`, `PROJ-123-impl.md` |
+| `#\d+` or `\d+` | GitHub Issues | `42.md`, `42-impl.md` |
+| `[A-Z]+-\d+` | Linear | `LIN-456.md`, `LIN-456-impl.md` |
+
+The ticket ID is everything before the first known suffix (`-impl.md`, `-context.md`, `-review-*.md`). If the filename does not match a known pattern, prompt the user to confirm the extracted ID.
 
 Set the review mode:
 - Spec → `review_mode: spec` (triggers 2C focus in reviewers)
