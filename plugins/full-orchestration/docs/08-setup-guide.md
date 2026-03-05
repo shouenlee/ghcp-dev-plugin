@@ -101,7 +101,7 @@ To use this approach:
 The pipeline delegates Stage 4 (Code Review) and Stage 5 (PR Creation) to separate plugins. Install them alongside `full-orchestration`:
 
 ```bash
-claude plugin add ./plugins/deep-review    # Stage 4: Multi-agent adversarial code review
+claude plugin add ./plugins/deep_review    # Stage 4: Multi-agent adversarial code review
 claude plugin add ./plugins/gh-pr-tools    # Stage 5: PR creation with structured descriptions
 ```
 

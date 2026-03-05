@@ -11,12 +11,14 @@ plugins/full-orchestration/
 ├── skills/
 │   ├── swe/
 │   │   └── SKILL.md                         # Main orchestrator skill
-│   ├── ticket-intake/
+│   ├── ticket_intake/
 │   │   └── SKILL.md                         # Stage 1: ticket fetching
-│   ├── spec-writer/
+│   ├── spec_writer/
 │   │   └── SKILL.md                         # Stage 2: spec orchestration
-│   └── spec-review/
-│       └── SKILL.md                         # Stage 2C/2E: review team
+│   ├── spec_review/
+│   │   └── SKILL.md                         # Stage 2C/2E: review team
+│   └── tdd_implement/
+│       └── SKILL.md                         # Stage 3: TDD implementation
 ├── agents/
 │   ├── spec-architect.agent.md              # Stage 2B: spec generation
 │   ├── impl-planner.agent.md               # Stage 2D: implementation planning
@@ -92,11 +94,11 @@ description: >-
 
 ### ticket-intake/SKILL.md
 
-Location: `plugins/full-orchestration/skills/ticket-intake/SKILL.md`
+Location: `plugins/full-orchestration/skills/ticket_intake/SKILL.md`
 
 ```yaml
 ---
-name: ticket-intake
+name: ticket_intake
 description: >-
   Fetch and parse a ticket from Jira, Linear, or GitHub Issues.
   Use when starting work on a ticket, beginning a new feature,
@@ -110,11 +112,11 @@ description: >-
 
 ### spec-writer/SKILL.md
 
-Location: `plugins/full-orchestration/skills/spec-writer/SKILL.md`
+Location: `plugins/full-orchestration/skills/spec_writer/SKILL.md`
 
 ```yaml
 ---
-name: spec-writer
+name: spec_writer
 description: >-
   Generate a technical spec and implementation plan for a ticket.
   Use when you have parsed requirements and need a detailed
@@ -128,11 +130,11 @@ description: >-
 
 ### spec-review/SKILL.md
 
-Location: `plugins/full-orchestration/skills/spec-review/SKILL.md`
+Location: `plugins/full-orchestration/skills/spec_review/SKILL.md`
 
 ```yaml
 ---
-name: spec-review
+name: spec_review
 description: >-
   Run a four-agent adversarial review on a technical spec or
   implementation plan. Use when a spec or plan needs evaluation

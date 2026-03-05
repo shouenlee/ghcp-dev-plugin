@@ -14,7 +14,7 @@ A cross-platform plugin marketplace for Claude Code and GitHub Copilot CLI. Plug
 plugins/<plugin-name>/
 ├── .claude-plugin/plugin.json        # Minimal metadata (name, description, author)
 ├── skills/<skill-name>/SKILL.md      # Skill definitions (YAML frontmatter + markdown)
-├── agents/<name>.agent.md            # Agent definitions
+├── agents/<name>.agent.md            # Agent definitions (name: PascalCase in frontmatter)
 └── hooks.json                        # Event-based hooks
 ```
 
@@ -38,7 +38,7 @@ The current standard for skills uses YAML frontmatter:
 
 ```yaml
 ---
-name: skill-name          # Must match folder name, lowercase/hyphens, 1-64 chars
+name: skill_name          # Must match folder name, lowercase/underscores (snake_case), 1-64 chars
 description: 'What it does. Use when <triggers and keywords>.'  # 1-1024 chars
 ---
 ```
@@ -62,7 +62,8 @@ The `description` is the primary mechanism for automatic skill discovery — it 
 
 There is no automated CI. Validate manually:
 - Plugin name is lowercase with hyphens, matches across plugin.json and marketplace entries
-- Skill `name` field matches its folder name
+- Skill `name` field is snake_case and matches its folder name
 - Skill `description` is 10-1024 chars and explains what AND when
+- Agent `name` field is PascalCase (e.g., `SpecArchitect`, `TddEngineer`)
 - Both marketplace.json files are identical
 - One plugin per PR

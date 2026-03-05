@@ -41,7 +41,7 @@ Comprehensive documentation lives in [`docs/`](docs/):
 
 ## Plugin Components
 
-- **Skills:** `swe` (orchestrator), `ticket-intake`, `spec-writer`, `spec-review`
+- **Skills:** `swe` (orchestrator), `ticket_intake`, `spec_writer`, `spec_review`
 - **Agents:** `spec-architect`, `impl-planner`, `tdd-engineer`, `maintainability-reviewer`, `security-reviewer`, `efficiency-reviewer`, `completeness-reviewer`
 - **Hooks:** Contextual suggestions for ticket and commit workflows
 
@@ -49,5 +49,5 @@ Comprehensive documentation lives in [`docs/`](docs/):
 
 This plugin reuses existing plugins rather than duplicating functionality:
 
-- [`deep-review`](../deep-review/) — Stage 4 code review agents
+- [`deep-review`](../deep_review/) — Stage 4 code review agents
 - [`gh-pr-tools`](../gh-pr-tools/) — Stage 5 PR creation
