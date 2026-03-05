@@ -228,35 +228,43 @@ Update `.claude/swe-state/{ticket-id}.json` with Stage 4 results. Set `approved`
 
 ### Iterate: Spawn TDD Engineer with Review Findings
 
-Spawn the TDD engineer directly with both the original context and the review findings in the prompt:
+Before spawning, capture the user's direction — what they said when they chose "Iterate." This may be a general instruction ("refactor the auth middleware like the architect suggested") or a specific focus ("just fix the critical findings"). Include it verbatim or as a faithful summary.
+
+Spawn the TDD engineer with file references to all relevant context. Do NOT inline findings — the engineer reads them on demand.
 
 ```
 subagent_type: full-orchestration:TddEngineer
 prompt: |
-  You are the TDD ENGINEER continuing a previous implementation.
+  You are the TDD ENGINEER iterating on a previous implementation
+  based on code review feedback.
 
   Your original inputs:
     Technical spec:       .claude/specs/{ticket-id}.md
     Implementation plan:  .claude/specs/{ticket-id}-impl.md
     Codebase context:     .claude/specs/{ticket-id}-context.md
 
-  Code review feedback to address:
+  Your previous implementation:
+    Summary:              .claude/swe-state/{ticket-id}/impl-summary.md
 
-  ## Critical
-  - {finding} — {file}:{line}
+  Review feedback:
+    Full review:          .claude/swe-state/{ticket-id}/review-summary.md
 
-  ## Major
-  - {finding} — {file}:{line}
+  User direction:
+    {user's verbatim instruction or faithful summary of what they asked for}
 
-  Address each finding while keeping all existing tests passing.
-  Do NOT re-implement completed work — only fix the identified issues
-  using TDD (write/update tests first, then fix).
+  Read the review summary and your implementation summary to understand
+  what was built and what needs to change. Read the spec, plan, and
+  context as needed to make correct decisions.
 
-  Work on the current branch. Do NOT create or switch branches.
+  Use TDD: write or update tests first, then fix. Keep all existing
+  tests passing. Work on the current branch — do NOT create or switch
+  branches.
+
   Commit after each fix: "review: fix {severity} — {short description}"
   Run the full test suite when all fixes are complete.
 
-  Write the implementation summary to: .claude/swe-state/{ticket-id}/impl-summary.md
+  Write the updated implementation summary to:
+    .claude/swe-state/{ticket-id}/impl-summary.md
 ```
 
 Wait for the agent to complete, then return to Phase 2 for re-review.

@@ -222,6 +222,7 @@ The orchestrator reads and writes `.claude/swe-state/{ticket-id}.json`. Every wr
 {
   "ticket_id": "PROJ-123",
   "target_branch": "main",
+  "feature_branch": "feat/PROJ-123",
   "current_stage": "implement",
   "status": "awaiting_approval",
   "stages": {
