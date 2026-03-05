@@ -17,8 +17,10 @@ plugins/full-orchestration/
 │   │   └── SKILL.md                         # Stage 2: spec orchestration
 │   ├── spec_review/
 │   │   └── SKILL.md                         # Stage 2C/2E: review team
-│   └── tdd_implement/
-│       └── SKILL.md                         # Stage 3: TDD implementation
+│   ├── tdd_implement/
+│   │   └── SKILL.md                         # Stage 3: TDD implementation
+│   └── code_review/
+│       └── SKILL.md                         # Stage 4: code review
 ├── agents/
 │   ├── spec-architect.agent.md              # Stage 2B: spec generation
 │   ├── impl-planner.agent.md               # Stage 2D: implementation planning
@@ -92,7 +94,7 @@ description: >-
 
 **Body contains:** The full orchestration logic — argument parsing (`--skip-spec`, `--from=STAGE`, `--skip-review`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
 
-### ticket-intake/SKILL.md
+### ticket_intake/SKILL.md
 
 Location: `plugins/full-orchestration/skills/ticket_intake/SKILL.md`
 
@@ -110,7 +112,7 @@ description: >-
 
 **Body contains:** Instructions for auto-detecting the ticketing system from the input, fetching ticket data via MCP (Jira/Linear) or `gh` CLI (GitHub Issues), extracting structured fields (title, description, acceptance criteria, comments, labels), searching the codebase for affected areas, and presenting a summary for user approval.
 
-### spec-writer/SKILL.md
+### spec_writer/SKILL.md
 
 Location: `plugins/full-orchestration/skills/spec_writer/SKILL.md`
 
@@ -128,7 +130,7 @@ description: >-
 
 **Body contains:** Instructions for orchestrating the five sub-stages of Stage 2: (2A) spawning 3-5 explorer subagents to map affected codebase areas, (2B) invoking the spec-architect agent to synthesize findings into a technical spec, (2C) running the 4-agent review team via spec-review on the spec, (2D) invoking the impl-planner agent to produce a step-by-step plan, (2E) running the review team again on the implementation plan. Handles iteration if reviewers request changes.
 
-### spec-review/SKILL.md
+### spec_review/SKILL.md
 
 Location: `plugins/full-orchestration/skills/spec_review/SKILL.md`
 
@@ -145,6 +147,40 @@ description: >-
 ```
 
 **Body contains:** Instructions for spawning the four reviewer agents (maintainability, security, efficiency, completeness) as parallel subagents, collecting their individual findings, consolidating results into a single structured assessment with severity ratings, and determining whether the document passes review or needs revision.
+
+### tdd_implement/SKILL.md
+
+Location: `plugins/full-orchestration/skills/tdd_implement/SKILL.md`
+
+```yaml
+---
+name: tdd_implement
+description: >-
+  Implement a ticket using test-driven development. Use when you
+  have an approved spec and implementation plan and are ready to
+  write code. Spawns a TDD engineer agent in an isolated worktree.
+---
+```
+
+**Body contains:** Instructions for validating prerequisite files (spec, implementation plan, codebase context), spawning the TDD engineer agent in an isolated git worktree to execute the implementation plan using strict red/green/refactor methodology, reporting results (branch, test counts, coverage, deviations), and updating pipeline state. Handles agent failure, missing summaries, and WIP commits.
+
+### code_review/SKILL.md
+
+Location: `plugins/full-orchestration/skills/code_review/SKILL.md`
+
+```yaml
+---
+name: code_review
+description: >-
+  Run adversarial code review on a TDD implementation. Use when
+  you have a completed implementation branch ready for review
+  before PR creation. Delegates to the deep-review plugin for
+  parallel three-agent analysis, classifies findings by severity,
+  auto-fixes minor issues, and gates approval.
+---
+```
+
+**Body contains:** Instructions for validating that Stage 3 is complete, checking out the feature branch and invoking `/deep_review` (which gathers its own diff context) for parallel three-agent analysis (Advocate, Skeptic, Architect), mapping findings to four severity levels (Critical/Major/Minor/Suggestion), presenting findings to the user, auto-fixing minor issues, escalating major and critical issues for user decision, spawning the TDD engineer for accepted fixes, iterating up to 3 times, and gating approval before Stage 5.
 
 ---
 
