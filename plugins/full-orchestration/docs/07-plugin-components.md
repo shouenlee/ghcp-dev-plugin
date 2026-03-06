@@ -138,7 +138,7 @@ description: >-
 ---
 ```
 
-**Body contains:** Instructions for orchestrating the five sub-stages of Stage 2: (2A) spawning 3-5 explorer subagents to map affected codebase areas, (2B) invoking the SpecArchitect agent to synthesize findings into a technical spec, (2C) running the 4-agent review team via spec-review on the spec, (2D) invoking the ImplPlanner agent to produce a step-by-step plan, (2E) running the review team again on the implementation plan. Handles iteration if reviewers request changes.
+**Body contains:** Instructions for orchestrating Stage 2: (2A) spawning 3-5 explorer subagents, (2B) invoking SpecArchitect to produce a spec, (2B↔2C) running an autonomous review-fix loop where 4 reviewers insert inline comments and SpecArchitect addresses them (max 5 rounds), (2D) invoking ImplPlanner to produce a step-by-step plan, (2D↔2E) running the same review-fix loop with ImplPlanner as author. Strips resolved comment markers before presenting clean docs to the user.
 
 ### spec_review/SKILL.md
 
@@ -148,15 +148,15 @@ Location: `plugins/full-orchestration/skills/spec_review/SKILL.md`
 ---
 name: spec_review
 description: >-
-  Run a four-agent adversarial review on a technical spec or
+  Run a four-agent inline comment review on a technical spec or
   implementation plan. Use when a spec or plan needs evaluation
   from maintainability, security, efficiency, and completeness
-  perspectives. Spawns four reviewer agents in parallel and
-  consolidates their findings into a single assessment.
+  perspectives. Spawns four reviewer agents that insert OPEN
+  blockquote comments directly into the document.
 ---
 ```
 
-**Body contains:** Instructions for spawning the four reviewer agents (maintainability, security, efficiency, completeness) as parallel subagents, collecting their individual findings, consolidating results into a single structured assessment with severity ratings, and determining whether the document passes review or needs revision.
+**Body contains:** Instructions for spawning four reviewer agents in parallel, each using Edit to insert inline blockquote comments (`> **[SEVERITY | Reviewer | OPEN]**`) directly into the document under review. Counts OPEN comments by severity and reports to the caller. No separate review document is produced.
 
 ### tdd_implement/SKILL.md
 
@@ -282,9 +282,9 @@ model: sonnet
 
 **Role:** Evaluates technical specs and implementation plans from a maintainability perspective. Checks for: unnecessary complexity, poor separation of concerns, unclear naming, missing documentation needs, coupling issues, and deviation from existing codebase patterns.
 
-**Tools used:** Read (to compare against existing code patterns), Grep (to check consistency with conventions).
+**Tools used:** Read (to compare against existing code patterns), Grep (to check consistency with conventions), Edit (to insert inline review comments into the document).
 
-**Behavior:** Produces a structured review with findings rated by severity (critical, warning, suggestion). Focuses on whether the proposed changes will be easy to understand, modify, and debug six months from now.
+**Behavior:** Produces a structured review with findings rated by severity (critical, warning, suggestion). Focuses on whether the proposed changes will be easy to understand, modify, and debug six months from now. Inserts findings as inline blockquote comments directly into the document under review.
 
 ### SecurityReviewer.agent.md
 
@@ -300,9 +300,9 @@ model: sonnet
 
 **Role:** Evaluates technical specs and implementation plans for security concerns. Checks for: injection vulnerabilities (SQL, command, XSS), authentication/authorization gaps, data exposure risks, insecure defaults, missing input validation at system boundaries, and OWASP Top 10 issues.
 
-**Tools used:** Read (to examine existing security patterns), Grep (to find related auth/validation code).
+**Tools used:** Read (to examine existing security patterns), Grep (to find related auth/validation code), Edit (to insert inline review comments into the document).
 
-**Behavior:** Produces a structured review with findings rated by severity. Focuses on attack surface changes introduced by the proposed design. References OWASP categories where applicable.
+**Behavior:** Produces a structured review with findings rated by severity. Focuses on attack surface changes introduced by the proposed design. References OWASP categories where applicable. Inserts findings as inline blockquote comments directly into the document under review.
 
 ### EfficiencyReviewer.agent.md
 
@@ -318,9 +318,9 @@ model: sonnet
 
 **Role:** Evaluates technical specs and implementation plans for performance and efficiency. Checks for: N+1 query patterns, unnecessary allocations, missing caching opportunities, unbounded operations, inefficient data structures, and scalability concerns under load.
 
-**Tools used:** Read (to examine existing performance patterns), Grep (to find related database/caching code).
+**Tools used:** Read (to examine existing performance patterns), Grep (to find related database/caching code), Edit (to insert inline review comments into the document).
 
-**Behavior:** Produces a structured review with findings rated by severity. Focuses on whether the proposed approach will perform acceptably at expected scale. Suggests concrete alternatives for identified bottlenecks.
+**Behavior:** Produces a structured review with findings rated by severity. Focuses on whether the proposed approach will perform acceptably at expected scale. Suggests concrete alternatives for identified bottlenecks. Inserts findings as inline blockquote comments directly into the document under review.
 
 ### CompletenessReviewer.agent.md
 
@@ -336,9 +336,9 @@ model: sonnet
 
 **Role:** Evaluates technical specs and implementation plans for completeness. Checks for: unaddressed acceptance criteria from the ticket, missing edge cases, unhandled error scenarios, gaps in test coverage, missing migration steps, and incomplete rollback plans.
 
-**Tools used:** Read (to cross-reference the ticket requirements with the spec).
+**Tools used:** Read (to cross-reference the ticket requirements with the spec), Edit (to insert inline review comments into the document).
 
-**Behavior:** Produces a structured review with findings rated by severity. Cross-references every acceptance criterion from the ticket against the spec and plan to ensure nothing is missed. Identifies edge cases the spec author may not have considered.
+**Behavior:** Produces a structured review with findings rated by severity. Cross-references every acceptance criterion from the ticket against the spec and plan to ensure nothing is missed. Identifies edge cases the spec author may not have considered. Inserts findings as inline blockquote comments directly into the document under review.
 
 ---
 
