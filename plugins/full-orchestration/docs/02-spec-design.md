@@ -35,7 +35,7 @@ This is the most critical stage in the pipeline. A thorough spec prevents wasted
 | **User experience** | Familiar format | Structured approval flow | Complex, many interactions |
 | **Recommendation** | Fallback option | **RECOMMENDED** | Over-engineered for most tasks |
 
-**Decision:** Option B — custom `spec_writer` skill with `spec-architect` and `impl-planner` agents, using Option A as a fallback for simpler tickets. The multi-explorer approach from Option C is incorporated into sub-stage 2A within Option B's flow.
+**Decision:** Option B — custom `spec_writer` skill with `SpecArchitect` and `ImplPlanner` agents, using Option A as a fallback for simpler tickets. The multi-explorer approach from Option C is incorporated into sub-stage 2A within Option B's flow.
 
 ---
 
@@ -96,14 +96,14 @@ The context document is stored at `.claude/specs/{ticket-id}-context.md` for ref
 
 ### 2B: High-Level Spec Generation
 
-The `spec-architect` agent reads the ticket requirements and the Codebase Context Document, then produces the technical spec. This is the "what and why" document.
+The `SpecArchitect` agent reads the ticket requirements and the Codebase Context Document, then produces the technical spec. This is the "what and why" document.
 
 #### Spec Structure
 
 ```markdown
 # Technical Spec: {ticket-title}
 **Ticket:** {ticket-id}
-**Author:** spec-architect agent
+**Author:** SpecArchitect agent
 **Status:** Draft | In Review | Approved
 
 ## 1. Requirements Summary
@@ -216,7 +216,7 @@ The user reviews the feedback, discusses changes with Claude, and either:
 
 ### 2D: Detailed Implementation Document
 
-After the spec is reviewed and approved, the `impl-planner` agent reads the approved spec and the Codebase Context Document to produce the implementation doc. This is the "exactly how" document.
+After the spec is reviewed and approved, the `ImplPlanner` agent reads the approved spec and the Codebase Context Document to produce the implementation doc. This is the "exactly how" document.
 
 #### Implementation Doc Structure
 
@@ -224,7 +224,7 @@ After the spec is reviewed and approved, the `impl-planner` agent reads the appr
 # Implementation Plan: {ticket-title}
 **Ticket:** {ticket-id}
 **Spec:** .claude/specs/{ticket-id}.md
-**Author:** impl-planner agent
+**Author:** ImplPlanner agent
 
 ## 1. File Changes
 
@@ -316,7 +316,7 @@ The following agents are needed for Stage 2:
 
 | Skill | File | Description |
 |---|---|---|
-| `spec_writer` | `skills/spec_writer/SKILL.md` | Orchestrates the full 2A-2E flow: spawns explorer agents, generates spec via `spec-architect`, runs review team, generates implementation doc via `impl-planner`, runs final review. Manages user approval gates between sub-stages. |
+| `spec_writer` | `skills/spec_writer/SKILL.md` | Orchestrates the full 2A-2E flow: spawns explorer agents, generates spec via `SpecArchitect`, runs review team, generates implementation doc via `ImplPlanner`, runs final review. Manages user approval gates between sub-stages. |
 | `spec_review` | `skills/spec_review/SKILL.md` | Runs the 4-agent review team on any document (spec or implementation doc). Can be invoked independently to re-review after changes. Produces consolidated review with severity ratings. |
 
 ---
@@ -334,7 +334,7 @@ spec-writer skill starts
     │
     ├── 2A: Spawn explorer agents (parallel) → Codebase Context Document
     │
-    ├── 2B: spec-architect produces Technical Spec (draft)
+    ├── 2B: SpecArchitect produces Technical Spec (draft)
     │         │
     │         ▼
     │       User reviews spec
@@ -348,7 +348,7 @@ spec-writer skill starts
     │       ├── Updates spec → re-run review
     │       └── Approves → proceed
     │
-    ├── 2D: impl-planner produces Implementation Doc
+    ├── 2D: ImplPlanner produces Implementation Doc
     │         │
     │         ▼
     │       User reviews impl doc

@@ -94,7 +94,7 @@ Custom reviewers would be defined as additional agent files in the `deep-review`
 Stages can be swapped for project-specific alternatives:
 
 - Replace `deep-review` with a lighter single-agent reviewer for small projects.
-- Replace `gh-pr-tools` with a GitLab-specific PR plugin.
+- Replace the `gh` CLI commands in `pr_create` with a GitLab-specific PR plugin.
 - Skip Stage 1 entirely by passing requirements inline instead of a ticket ID.
 
 ### CI/CD integration

@@ -16,7 +16,7 @@ The goal: catch bugs, security holes, and architectural missteps **before** they
 | **B** | Custom review team | Full control over prompts and review focus areas | Duplicates existing work; maintenance burden | Use only if review needs diverge significantly |
 | **C** | Sequential reviews | One reviewer at a time; lower cost per run | Slower wall-clock time; reviewers cannot cross-reference each other | Use for budget-constrained runs |
 
-Option A is the default. The orchestrator delegates to the [`deep-review`](../../deep_review/skills/deep_review/SKILL.md) plugin, which already implements parallel three-agent review with synthesis.
+Option A is the default. The orchestrator delegates to the [`deep-review`](../../deep-review/skills/deep_review/SKILL.md) plugin, which already implements parallel three-agent review with synthesis.
 
 ---
 
@@ -32,7 +32,7 @@ The `deep-review` plugin spawns three agents in parallel, each reading a shared 
 
 Each agent produces an independent analysis. The orchestrator (within `deep-review`) synthesizes these into a consolidated review using evidence-based conflict resolution — `file:line` citations beat assertions.
 
-For full details on how context is gathered, agents are spawned, and synthesis works, see the [deep-review skill documentation](../../deep_review/skills/deep_review/SKILL.md).
+For full details on how context is gathered, agents are spawned, and synthesis works, see the [deep-review skill documentation](../../deep-review/skills/deep_review/SKILL.md).
 
 ---
 
@@ -153,7 +153,7 @@ The approval prompt includes:
 
 ## Cross-References
 
-- [deep-review plugin](../../deep_review/skills/deep_review/SKILL.md) — the review engine used in this stage
+- [deep-review plugin](../../deep-review/skills/deep_review/SKILL.md) — the review engine used in this stage
 - [Stage 3: TDD Implementation](03-tdd-implementation.md) — produces the diff that gets reviewed; TDD engineer handles review fixes
 - [Stage 5: PR Creation](05-pr-creation.md) — consumes the approved review output
 - [00 — System Overview](00-overview.md) — full pipeline architecture

@@ -47,7 +47,7 @@ description: >-
     │   ├─ 2E  Review team evaluates impl plan
     │   └─ Present spec + plan → User confirms ✓
     │
-    ├─ Stage 3: tdd-engineer
+    ├─ Stage 3: TddEngineer
     │   ├─ Work on current branch
     │   ├─ Write failing tests from spec
     │   ├─ Implement until tests pass
@@ -57,7 +57,7 @@ description: >-
     ├─ Stage 4: deep-review (external plugin)
     │   ├─ Skeptic, advocate, architect agents review diff
     │   ├─ Produce consolidated assessment
-    │   ├─ If issues found → iterate with tdd-engineer
+    │   ├─ If issues found → iterate with TddEngineer
     │   └─ Present review → User confirms ✓
     │
     └─ Stage 5: pr-create
@@ -133,7 +133,7 @@ The orchestrator loads saved state from `.claude/swe-state/PROJ-123.json` and pi
 | Stage skill fails | Report the error, save state, suggest `/swe ID --from=STAGE` to retry |
 | External plugin unavailable | Report which plugin is missing and show install command |
 | MCP server not configured | Show setup command for the detected ticketing system |
-| Test suite fails in Stage 3 | The tdd-engineer iterates internally; only surfaces to the user if it cannot resolve after retries |
+| Test suite fails in Stage 3 | The TddEngineer iterates internally; only surfaces to the user if it cannot resolve after retries |
 | Review finds critical issues | Stage 4 loops back to Stage 3 automatically (with user approval) |
 
 ## State Management
@@ -150,32 +150,7 @@ The orchestrator passes data between stages through the state file. Each stage r
 
 ### State File Structure
 
-```json
-{
-  "ticket_id": "PROJ-123",
-  "target_branch": "main",
-  "current_stage": "implement",
-  "status": "awaiting_approval",
-  "stages": {
-    "intake": {
-      "completed": true,
-      "ticket_file": ".claude/swe-state/PROJ-123/ticket.json"
-    },
-    "spec": {
-      "completed": true,
-      "spec_file": ".claude/specs/PROJ-123.md",
-      "impl_plan_file": ".claude/specs/PROJ-123-impl.md",
-      "context_file": ".claude/specs/PROJ-123-context.md",
-      "explorers_run": 4,
-      "spec_review_iterations": 1,
-      "plan_review_iterations": 1
-    },
-    "implement": { "completed": false, "test_results": null },
-    "review": { "completed": false, "approved": false, "iterations": 0, "findings": null },
-    "pr": { "completed": false, "pr_number": null, "pr_url": null }
-  }
-}
-```
+See [10 — Data Models & Context Passing](10-data-models-and-context.md) for the full schema. The authoritative initial state is defined in the `/swe` skill (Phase 2, Step 4).
 
 ## Cross-References
 

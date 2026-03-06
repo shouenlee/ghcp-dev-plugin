@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Stage 3 takes the approved technical spec and implementation doc from Stage 2 and implements the changes following strict test-driven development. A `tdd-engineer` agent works on a dedicated feature branch, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
+Stage 3 takes the approved technical spec and implementation doc from Stage 2 and implements the changes following strict test-driven development. A `TddEngineer` agent works on a dedicated feature branch, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
 
 This stage is mechanical by design. All design decisions were made in Stage 2. The implementation doc provides exact file paths, function signatures, test cases with inputs/outputs, and a step-by-step order. The TDD agent executes this plan without improvising.
 
@@ -22,7 +22,7 @@ This stage is mechanical by design. All design decisions were made in Stage 2. T
 
 ## Options Comparison
 
-| Criteria | A: Single `tdd-engineer` agent | B: Team (test-writer + implementer) | C: Iterative loop (one test at a time) |
+| Criteria | A: Single `TddEngineer` agent | B: Team (test-writer + implementer) | C: Iterative loop (one test at a time) |
 |---|---|---|---|
 | **Implementation effort** | Low — one agent, one skill | Medium — coordination between two agents | Medium — loop orchestration |
 | **Context coherence** | High — single agent sees full picture | Lower — handoff between agents loses context | Medium — narrow focus per iteration |
@@ -31,15 +31,15 @@ This stage is mechanical by design. All design decisions were made in Stage 2. T
 | **Error recovery** | Simple — single agent retries | Complex — which agent owns the fix? | Simple — retry current iteration |
 | **Recommendation** | **RECOMMENDED** | Over-engineered | Too slow for most tasks |
 
-**Decision:** Option A — a single `tdd-engineer` agent that follows the red/green/refactor cycle. The implementation doc from Stage 2 already provides the test plan, so splitting test-writing from implementation adds coordination cost without meaningful quality gain.
+**Decision:** Option A — a single `TddEngineer` agent that follows the red/green/refactor cycle. The implementation doc from Stage 2 already provides the test plan, so splitting test-writing from implementation adds coordination cost without meaningful quality gain.
 
 ---
 
-## `tdd-engineer` Agent Specification
+## `TddEngineer` Agent Specification
 
 ### Overview
 
-The `tdd-engineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation doc and executes the implementation plan step by step using TDD on the current branch.
+The `TddEngineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation doc and executes the implementation plan step by step using TDD on the current branch.
 
 ### Workflow
 
@@ -133,7 +133,7 @@ After all steps are complete, the agent produces a summary:
 
 ## Feature Branch Strategy
 
-The user should create a feature branch and invoke `/swe` from it with a clean working tree (no uncommitted changes). The `tdd-engineer` agent works directly on the current branch.
+The user should create a feature branch and invoke `/swe` from it with a clean working tree (no uncommitted changes). The `TddEngineer` agent works directly on the current branch.
 
 ### How It Works
 
@@ -146,7 +146,7 @@ The user should create a feature branch and invoke `/swe` from it with a clean w
 
 ## Language-Specific Test Runners
 
-The `tdd-engineer` agent detects the project's language and test framework to run tests correctly.
+The `TddEngineer` agent detects the project's language and test framework to run tests correctly.
 
 | Language | Test Runner | Command | Config File |
 |---|---|---|---|
@@ -180,7 +180,7 @@ To maintain TDD discipline and catch regressions immediately, the plugin suggest
       "event": "after_edit",
       "pattern": "\\.(py|js|ts|go|rs|java|rb)$",
       "action": "suggest",
-      "message": "Source file modified. Run tests to verify changes: {detected_test_command}"
+      "message": "Source file modified. Run tests to verify your changes."
     }
   ]
 }

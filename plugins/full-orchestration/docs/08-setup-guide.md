@@ -115,7 +115,7 @@ The pipeline uses sensible defaults. Override them by setting values in your pro
 | Spec storage | `.claude/specs/` | Where generated specs and implementation plans are written |
 | Pipeline state | `.claude/swe-state/` | Stage transition state, approval records, and logs |
 | Default ticketing system | Auto-detected from ticket ID format | `jira`, `linear`, `github`, or `generic` |
-| Branch naming | `swe/<ticket-id>` | Convention for feature branches created by the pipeline |
+| Branch naming | `feat/<ticket-id>` | Convention for feature branches created by the pipeline |
 | Review iteration limit | `3` | Maximum review-fix cycles before the pipeline stops and asks for help |
 
 ## Verification

@@ -20,7 +20,9 @@ Four parallel reviewer agents evaluate a document from different perspectives, t
 
 ## Phase 1: Gather Context
 
-**Detect type** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix).
+**Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix).
+
+**Read state** to get paths: `stages.spec.spec_review_file` (spec mode) or `stages.spec.impl_review_file` (impl mode) for the output path. Also read `stages.intake.ticket_file` and `stages.spec.context_file`.
 
 **Read**: document under review, ticket.json, context doc. Proceed with what's available — document under review is the minimum.
 
@@ -71,7 +73,7 @@ On agent failure: offer re-trigger, proceed without, or abort.
 
 1. **Group** findings by severity: CRITICAL → HIGH → MEDIUM → LOW
 2. **Deduplicate**: merge same-issue findings, tag `[Multi-reviewer]` for 2+ agreement
-3. **Write** consolidated review to output path (spec → `{ticket-id}-review-spec.md`, impl → `{ticket-id}-review-impl.md`)
+3. **Write** consolidated review to the output path from state (`spec_review_file` or `impl_review_file`)
 
 **Verdict**: PASS (zero CRITICAL + zero HIGH) or NEEDS REVISION.
 

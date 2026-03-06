@@ -35,7 +35,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
                             ▼
                ┌──────────────────────────┐
                │ Stage 3: TDD Implement.   │
-               │   (tdd-engineer agent)    │
+               │   (TddEngineer agent)    │
                │   Feature branch           │
                └────────────┬─────────────┘
                             │ ✅ User approves implementation
@@ -76,7 +76,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 
 2. **Spec & Design** — An explorer team fans out across the codebase to identify affected areas. The spec architect synthesizes findings into a technical spec. A review team of four specialists (maintainability, security, efficiency, completeness) evaluates the spec. An implementation planner produces a step-by-step build plan. A final review validates the plan.
 
-3. **TDD Implementation** — A `tdd-engineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
+3. **TDD Implementation** — A `TddEngineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
 
 4. **Code Review** — Delegates to the `deep-review` plugin. Three agents (skeptic, advocate, architect) review the diff from independent perspectives and produce a consolidated assessment.
 
@@ -116,3 +116,4 @@ claude mcp add --transport sse linear-server https://mcp.linear.app/sse
 | [07 — Plugin Components](07-plugin-components.md) | Full inventory of skills, agents, and hooks |
 | [08 — Setup Guide](08-setup-guide.md) | Installation, MCP configuration, prerequisites |
 | [09 — Improvements](09-improvements.md) | Future ideas and known limitations |
+| [10 — Data Models & Context](10-data-models-and-context.md) | State schema, artifact files, context flow |

@@ -79,12 +79,11 @@ prompt: |
 
   For each: write/update test, apply fix, run tests, commit.
   Do NOT modify beyond scope of these fixes.
-  Write results to: .claude/swe-state/{ticket-id}/review-fixes-{N}.md
 ```
 
 ### 2.5 Iterate or Continue
 
-If iteration < 3 and fixes applied → re-review (step 2.1). If iteration = 3 or no fixes needed → approval gate. Save each iteration to `.claude/swe-state/{ticket-id}/review-iteration-{N}.md`.
+If iteration < 3 and fixes applied → re-review (step 2.1). If iteration = 3 or no fixes needed → approval gate. Save each iteration's review to `review_iteration_file` path from state (overwriting prior iteration).
 
 ---
 

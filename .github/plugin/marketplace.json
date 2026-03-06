@@ -185,7 +185,7 @@
       },
       "source": "./plugins/full-orchestration",
       "category": "workflow",
-      "tags": ["orchestration", "agentic", "tdd", "pipeline", "software-engineering"]
+      "tags": ["orchestration", "agentic", "tdd", "code-review", "spec", "pipeline", "software-engineering"]
     },
     {
       "name": "ralph-wiggum",

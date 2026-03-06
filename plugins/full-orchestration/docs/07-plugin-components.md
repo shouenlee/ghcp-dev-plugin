@@ -66,12 +66,20 @@ Location: `plugins/full-orchestration/hooks.json`
       "pattern": "^gh issue view",
       "action": "suggest",
       "message": "Tip: Use /swe to start the full software engineering pipeline for this ticket."
+    },
+    {
+      "event": "after_edit",
+      "pattern": "\\.(py|js|ts|go|rs|java|rb)$",
+      "action": "suggest",
+      "message": "Source file modified. Run tests to verify your changes."
     }
   ]
 }
 ```
 
-This hook fires after the user runs `gh issue view` and suggests using the `/swe` orchestrator to drive the ticket through the full pipeline.
+Two hooks:
+1. **after_command** — Fires after `gh issue view` and suggests using `/swe` for the ticket.
+2. **after_edit** — Fires after editing source files and reminds to run tests.
 
 ---
 
@@ -130,7 +138,7 @@ description: >-
 ---
 ```
 
-**Body contains:** Instructions for orchestrating the five sub-stages of Stage 2: (2A) spawning 3-5 explorer subagents to map affected codebase areas, (2B) invoking the spec-architect agent to synthesize findings into a technical spec, (2C) running the 4-agent review team via spec-review on the spec, (2D) invoking the impl-planner agent to produce a step-by-step plan, (2E) running the review team again on the implementation plan. Handles iteration if reviewers request changes.
+**Body contains:** Instructions for orchestrating the five sub-stages of Stage 2: (2A) spawning 3-5 explorer subagents to map affected codebase areas, (2B) invoking the SpecArchitect agent to synthesize findings into a technical spec, (2C) running the 4-agent review team via spec-review on the spec, (2D) invoking the ImplPlanner agent to produce a step-by-step plan, (2E) running the review team again on the implementation plan. Handles iteration if reviewers request changes.
 
 ### spec_review/SKILL.md
 
@@ -344,7 +352,7 @@ The following entry must appear in both marketplace manifest files:
 ```json
 {
   "name": "full-orchestration",
-  "description": "Fully agentic software engineering pipeline — ticket intake, spec design, TDD implementation, code review, and PR creation",
+  "description": "Fully agentic software engineering pipeline — from ticket intake through spec design, TDD implementation, code review, and PR creation",
   "version": "1.0.0",
   "author": {
     "name": "shouenlee",

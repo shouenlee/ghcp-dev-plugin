@@ -97,6 +97,7 @@ mkdir -p .claude/specs
       "completed": false,
       "approved": false,
       "iterations": 0,
+      "review_iteration_file": ".claude/swe-state/{ticket-id}/review-iteration.md",
       "review_summary_file": ".claude/swe-state/{ticket-id}/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },

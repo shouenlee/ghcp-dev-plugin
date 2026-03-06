@@ -18,7 +18,7 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
   "target_branch": "main",
   "feature_branch": "feat/PROJ-123",
   "current_stage": "intake | spec | implement | review | pr",
-  "status": "in_progress | awaiting_approval | approved | failed | aborted | completed",
+  "status": "in_progress | failed | aborted | completed",
   "stages": {
     "intake": {
       "completed": false,
@@ -30,13 +30,11 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
       "impl_plan_file": ".claude/specs/PROJ-123-impl.md",
       "context_file": ".claude/specs/PROJ-123-context.md",
       "spec_review_file": ".claude/specs/PROJ-123-review-spec.md",
-      "impl_review_file": ".claude/specs/PROJ-123-review-impl.md",
-      "explorers_run": 0,
-      "spec_review_iterations": 0,
-      "plan_review_iterations": 0
+      "impl_review_file": ".claude/specs/PROJ-123-review-impl.md"
     },
     "implement": {
       "completed": false,
+      "impl_summary_file": ".claude/swe-state/PROJ-123/impl-summary.md",
       "test_results": {
         "new_tests": 0,
         "modified_tests": 0,
@@ -48,6 +46,8 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
       "completed": false,
       "approved": false,
       "iterations": 0,
+      "review_iteration_file": ".claude/swe-state/PROJ-123/review-iteration.md",
+      "review_summary_file": ".claude/swe-state/PROJ-123/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
         "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },
@@ -88,8 +88,6 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
 | Value | Meaning |
 |---|---|
 | `in_progress` | A stage is currently running |
-| `awaiting_approval` | Stage completed, waiting for user approval at a gate |
-| `approved` | User approved the gate; proceeding to next stage |
 | `failed` | A stage encountered an error |
 | `aborted` | User chose to abort at a gate |
 | `completed` | All stages finished successfully |
@@ -620,19 +618,12 @@ structured-findings -->
 | Medium | **Minor** | Auto-fix when possible |
 | Low | **Suggestion** | Collect for follow-up items |
 
-### Review Iteration Files
+### Review Iteration File
 
-**Path**: `.claude/swe-state/{ticket-id}/review-iteration-{N}.md`
-**Producer**: `code_review` skill (each iteration)
+**Path**: `.claude/swe-state/{ticket-id}/review-iteration.md`
+**Producer**: `code_review` skill (each iteration, overwritten)
 
-Contains the consolidated review from that iteration with severity classifications.
-
-### Review Fix Files
-
-**Path**: `.claude/swe-state/{ticket-id}/review-fixes-{N}.md`
-**Producer**: `TddEngineer` agent (spawned by `code_review` for fixes)
-
-Contains fix results applied during that iteration.
+Contains the consolidated review from the latest iteration with severity classifications.
 
 ### Review Summary
 
@@ -666,18 +657,27 @@ When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEn
 ```
 subagent_type: full-orchestration:TddEngineer
 prompt: |
-  Your original inputs:
-    Technical spec:       .claude/specs/{ticket-id}.md
-    Implementation plan:  .claude/specs/{ticket-id}-impl.md
-    Codebase context:     .claude/specs/{ticket-id}-context.md
+  Iterating on implementation based on code review feedback.
 
-  Code review feedback to address:
+  Original inputs:
+    Spec:        {spec_file from state}
+    Plan:        {impl_plan_file from state}
+    Context:     {context_file from state}
 
-  ## Critical
-  - {finding} — {file}:{line}
+  Previous implementation:
+    Summary:     {impl_summary_file from state}
 
-  ## Major
-  - {finding} — {file}:{line}
+  Review feedback:
+    Full review: {review_summary_file from state}
+
+  User direction:
+    {verbatim user instruction}
+
+  Read review and impl summary to understand what needs to change.
+  Use TDD. Keep all existing tests passing.
+  Commit: "review: fix {severity} — {description}"
+  Run full suite when done.
+  Write updated summary to: {impl_summary_file from state}
 ```
 
 This loop is managed entirely within `code_review`. The `/swe` orchestrator waits for `code_review` to return with a final result.
@@ -759,8 +759,7 @@ Reviewed by: {reviewer agents}
 | `.claude/specs/{ticket-id}-impl.md` | ImplPlanner (2D) | spec_review (2E), TddEngineer, code_review iterate, pr_create | Entire pipeline |
 | `.claude/specs/{ticket-id}-review-impl.md` | spec_review (2E) | `spec_writer` (user presentation) | Entire pipeline |
 | `.claude/swe-state/{ticket-id}/impl-summary.md` | TddEngineer | `code_review`, `pr_create` | Stage 3 onward |
-| `.claude/swe-state/{ticket-id}/review-iteration-{N}.md` | `code_review` | `code_review` (next iteration) | Stage 4 |
-| `.claude/swe-state/{ticket-id}/review-fixes-{N}.md` | TddEngineer (review fixes) | `code_review` | Stage 4 |
+| `.claude/swe-state/{ticket-id}/review-iteration.md` | `code_review` (overwritten each iteration) | `code_review` (approval gate) | Stage 4 |
 | `.claude/swe-state/{ticket-id}/review-summary.md` | `code_review` | `pr_create` | Stage 4 onward |
 
 ### Ephemeral Files
