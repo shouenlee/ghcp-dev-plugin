@@ -45,14 +45,17 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
     "review": {
       "completed": false,
       "approved": false,
+      "last_review_commit": null,
       "iterations": 0,
+      "phase": "initial | incremental | validation | capped | complete",
       "review_iteration_file": ".claude/swe-state/PROJ-123/review-iteration.md",
       "review_summary_file": ".claude/swe-state/PROJ-123/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
-        "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },
-        "minor": { "total": 0, "fixed": 0 },
-        "suggestions": 0
+        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "deferred": 0, "dismissed": 0 },
+        "minor": { "total": 0, "fixed": 0, "auto_fixed": 0 },
+        "suggestions": 0,
+        "dismissed": []
       }
     },
     "pr": {
@@ -650,9 +653,25 @@ Follow-up Items:
 Tests: {PASS/FAIL} after review fixes
 ```
 
-### Iterate Loop Context Passing
+### Auto-Fix Context Passing
 
-When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEngineer with both original context AND review findings:
+In Phases 2A and 2B, when Major or Minor findings need auto-fixing, `code_review` spawns TddEngineer with a scoped prompt:
+
+```
+subagent_type: full-orchestration:TddEngineer
+prompt: |
+  Applying review fixes on {feature_branch}.
+  Findings to fix:
+  {list with file:line references and severity}
+
+  For each: write/update test, apply fix, run tests, commit.
+  Commit message: "review: fix {severity} — {description}"
+  Do NOT modify beyond scope of these fixes.
+```
+
+### User-Directed Iterate Context Passing
+
+When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEngineer with full context AND user direction:
 
 ```
 subagent_type: full-orchestration:TddEngineer
@@ -668,7 +687,7 @@ prompt: |
     Summary:     {impl_summary_file from state}
 
   Review feedback:
-    Full review: {review_summary_file from state}
+    Full review: {review_iteration_file from state}
 
   User direction:
     {verbatim user instruction}
@@ -680,7 +699,19 @@ prompt: |
   Write updated summary to: {impl_summary_file from state}
 ```
 
-This loop is managed entirely within `code_review`. The `/swe` orchestrator waits for `code_review` to return with a final result.
+After completion, `code_review` updates `last_review_commit` and returns to Phase 2B.
+
+### Review Phase Tracking
+
+The `stages.review.phase` field tracks progression:
+
+| Phase Value | Meaning |
+|---|---|
+| `initial` | Phase 2A in progress |
+| `incremental` | Phase 2B in progress |
+| `validation` | Phase 2C in progress |
+| `capped` | Hit iteration cap without convergence |
+| `complete` | User approved at gate |
 
 ---
 
