@@ -147,68 +147,37 @@ After generating the spec, it is presented to the user for review. The user can:
 
 ---
 
-### 2C: Spec Review (Team of 4 Reviewer Agents)
+### 2C: Spec Review (Autonomous Loop with 2B)
 
-Once the user approves the high-level spec, it goes through automated multi-perspective review. Four reviewer agents run in parallel, each examining the spec through a different lens.
+Once the spec is generated, it enters an autonomous review-fix loop managed by `spec_writer`. Four reviewer agents insert inline comments directly into the spec document, then `SpecArchitect` addresses them. This repeats until convergence (0 OPEN comments) or 5 rounds.
 
-#### Reviewer Agents
+#### Inline Comment Format
 
-**Maintainability Reviewer**
-- Evaluates long-term sustainability of the proposed approach
-- Checks for tech debt introduction, pattern consistency with codebase
-- Flags deviations from established conventions found by the Pattern Explorer
-- Assesses naming consistency, module boundaries, separation of concerns
-
-**Security Reviewer**
-- Checks for injection risks (SQL, command, XSS, template)
-- Evaluates authentication and authorization gaps
-- Identifies data exposure risks (PII in logs, secrets in config)
-- References OWASP Top 10 against the proposed API and data changes
-- Flags missing input validation or sanitization
-
-**Efficiency Reviewer**
-- Identifies potential N+1 query patterns
-- Evaluates memory usage for large data sets
-- Checks for unnecessary computation or redundant operations
-- Assesses scalability under load (concurrent users, data growth)
-- Flags missing caching opportunities or index needs
-
-**Completeness Reviewer**
-- Identifies missing edge cases (null inputs, empty collections, boundary values)
-- Checks that all acceptance criteria from the ticket are addressed
-- Flags ambiguities or assumptions that lack explicit handling
-- Verifies error handling paths are specified
-- Ensures rollback and failure recovery are considered
-
-#### Review Output Format
-
-Each reviewer produces comments with severity ratings:
-
-| Severity | Meaning | Action Required |
-|---|---|---|
-| **CRITICAL** | Blocks implementation — must be resolved | Spec must be updated |
-| **HIGH** | Significant issue — should be resolved | Spec should be updated |
-| **MEDIUM** | Improvement opportunity — consider addressing | User decides |
-| **LOW** | Minor suggestion — nice to have | Optional |
-
-#### Consolidated Review
-
-All reviewer comments are merged into a single review document, grouped by severity. The consolidated review is presented to the user with a summary:
+Reviewers insert blockquote comments directly into the spec:
 
 ```
-Spec Review Complete:
-- 0 CRITICAL issues
-- 2 HIGH issues
-- 3 MEDIUM suggestions
-- 1 LOW suggestion
-
-[Detailed comments follow]
+> **[{SEVERITY} | {ReviewerName} | OPEN]** {comment text}
 ```
 
-The user reviews the feedback, discusses changes with Claude, and either:
-- Updates the spec and re-runs the review
-- Acknowledges findings and approves to proceed
-- Overrides specific findings with rationale
+Placed immediately after the relevant paragraph or section.
+
+#### Review-Fix Cycle
+
+1. `spec_review` spawns 4 reviewers in parallel → each inserts OPEN comments into the spec
+2. If 0 OPEN comments → converged
+3. `SpecArchitect` reads comments, fixes the spec, marks addressed comments RESOLVED
+4. On re-review, reviewers verify RESOLVED comments (remove satisfied ones, reopen inadequate ones) and add new OPEN comments
+5. Repeat until converged or 5 rounds
+
+After convergence, `spec_writer` strips all remaining RESOLVED comment markers.
+
+#### User Interaction
+
+After the loop completes, the user sees a clean spec (no review markers). If the loop hit the cap with OPEN comments remaining, those are shown separately.
+
+The user can:
+- **Approve** → proceed to 2D
+- **Request changes** → provide direction, re-enter the loop
 
 ---
 
@@ -270,9 +239,9 @@ The implementation doc is intentionally granular. It provides enough detail that
 
 ---
 
-### 2E: Implementation Doc Review
+### 2E: Implementation Doc Review (Autonomous Loop with 2D)
 
-The same four reviewer agents from sub-stage 2C re-review the implementation document, this time with a different focus.
+The same review-fix loop from 2B↔2C runs on the implementation document, with `ImplPlanner` as the author agent instead of `SpecArchitect`.
 
 #### Shifted Review Focus
 
@@ -291,7 +260,7 @@ Additional focus areas for 2E:
 
 #### Final Approval Gate
 
-The consolidated review is presented to the user. This is the last gate before implementation begins. Once approved, the implementation doc is stored and Stage 3 (TDD) can proceed.
+After the loop completes, the user sees a clean implementation plan. This is the last gate before Stage 3 begins.
 
 ---
 
@@ -332,32 +301,28 @@ spec-writer skill starts
     │
     ├── 2A: Spawn explorer agents (parallel) → Codebase Context Document
     │
-    ├── 2B: SpecArchitect produces Technical Spec (draft)
-    │         │
-    │         ▼
-    │       User reviews spec
-    │       ├── Asks questions / requests changes → iterate
-    │       └── Says "approved" → proceed
+    ├── 2B: SpecArchitect produces Technical Spec
     │
-    ├── 2C: spec-review runs 4 reviewers (parallel) → Consolidated Review
-    │         │
+    ├── 2B↔2C: Autonomous Review-Fix Loop (max 5 rounds)
+    │         │  spec_review inserts inline comments
+    │         │  SpecArchitect addresses comments
+    │         │  (repeat until 0 OPEN or cap)
+    │         │  Strip RESOLVED markers
     │         ▼
-    │       User reviews findings
-    │       ├── Updates spec → re-run review
+    │       User reviews clean spec
+    │       ├── Request changes → re-enter loop
     │       └── Approves → proceed
     │
     ├── 2D: ImplPlanner produces Implementation Doc
-    │         │
-    │         ▼
-    │       User reviews impl doc
-    │       ├── Requests changes → iterate
-    │       └── Approves → proceed
     │
-    ├── 2E: spec-review runs 4 reviewers on impl doc (parallel) → Consolidated Review
-    │         │
+    ├── 2D↔2E: Autonomous Review-Fix Loop (max 5 rounds)
+    │         │  spec_review inserts inline comments
+    │         │  ImplPlanner addresses comments
+    │         │  (repeat until 0 OPEN or cap)
+    │         │  Strip RESOLVED markers
     │         ▼
-    │       User reviews findings
-    │       ├── Updates impl doc → re-run review
+    │       User reviews clean impl doc
+    │       ├── Request changes → re-enter loop
     │       └── Approves → proceed to Stage 3
     │
     ▼
@@ -370,20 +335,16 @@ Spec + Impl Doc stored, Stage 3 begins
 
 Every agent's inputs must exist before it runs. The table below traces each step's inputs back to the step that produces them.
 
-| Step | Component | Inputs Required | Produced By | Output File |
+| Step | Component | Inputs Required | Produced By | Output |
 |---|---|---|---|---|
 | 2A | Explore subagents (parallel) | `ticket.json` | Stage 1 | — |
 | 2A | spec-writer (merge) | Explorer outputs | 2A explorers | `.claude/specs/{ticket-id}-context.md` |
 | 2B | SpecArchitect | `ticket.json`, `{ticket-id}-context.md` | Stage 1, 2A | `.claude/specs/{ticket-id}.md` |
-| — | User approval gate | `{ticket-id}.md` | 2B | — |
-| 2C | spec-review → 4 reviewers (parallel) | `{ticket-id}.md`, `ticket.json`, `{ticket-id}-context.md` | 2B, Stage 1, 2A | `.claude/specs/{ticket-id}-review-spec.md` |
-| — | User approval gate | `{ticket-id}-review-spec.md` | 2C | — |
+| 2B↔2C | spec_review + SpecArchitect (loop) | `{ticket-id}.md`, `ticket.json`, `{ticket-id}-context.md` | 2B, Stage 1, 2A | Inline comments in `{ticket-id}.md` (then stripped) |
+| — | User approval gate | Clean `{ticket-id}.md` | 2B↔2C loop | — |
 | 2D | ImplPlanner | `{ticket-id}.md`, `{ticket-id}-context.md` | 2B, 2A | `.claude/specs/{ticket-id}-impl.md` |
-| — | User approval gate | `{ticket-id}-impl.md` | 2D | — |
-| 2E | spec-review → 4 reviewers (parallel) | `{ticket-id}-impl.md`, `ticket.json`, `{ticket-id}-context.md` | 2D, Stage 1, 2A | `.claude/specs/{ticket-id}-review-impl.md` |
-| — | Final user approval gate | `{ticket-id}-review-impl.md` | 2E | — |
-
-The flow is strictly sequential (2A → 2B → 2C → 2D → 2E) with user approval gates between each step, so no agent runs before its inputs exist. Within 2A and 2C/2E, agents run in parallel but share no write dependencies — explorers produce independent output sections, and reviewers produce independent reviews consolidated by the orchestrator after all complete.
+| 2D↔2E | spec_review + ImplPlanner (loop) | `{ticket-id}-impl.md`, `ticket.json`, `{ticket-id}-context.md` | 2D, Stage 1, 2A | Inline comments in `{ticket-id}-impl.md` (then stripped) |
+| — | Final user approval gate | Clean `{ticket-id}-impl.md` | 2D↔2E loop | — |
 
 ### Cross-Reference: Stage 3 Inputs from Stage 2
 
@@ -401,9 +362,7 @@ All Stage 2 artifacts are stored under `.claude/specs/`:
 | File | Contents |
 |---|---|
 | `.claude/specs/{ticket-id}-context.md` | Codebase Context Document from 2A |
-| `.claude/specs/{ticket-id}.md` | Approved Technical Spec from 2B/2C |
-| `.claude/specs/{ticket-id}-impl.md` | Approved Implementation Doc from 2D/2E |
-| `.claude/specs/{ticket-id}-review-spec.md` | Consolidated spec review from 2C |
-| `.claude/specs/{ticket-id}-review-impl.md` | Consolidated impl doc review from 2E |
+| `.claude/specs/{ticket-id}.md` | Approved Technical Spec from 2B (reviewed via 2B↔2C loop) |
+| `.claude/specs/{ticket-id}-impl.md` | Approved Implementation Doc from 2D (reviewed via 2D↔2E loop) |
 
 These files are read by Stage 3 (TDD Implementation) and referenced in the final PR description (Stage 5).
