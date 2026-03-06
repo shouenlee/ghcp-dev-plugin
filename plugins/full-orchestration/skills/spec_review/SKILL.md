@@ -1,6 +1,11 @@
 ---
 name: spec_review
-description: "Run a four-agent adversarial review on a technical spec or implementation plan. Use when a spec or plan needs evaluation from maintainability, security, efficiency, and completeness perspectives. Spawns four reviewer agents in parallel and consolidates their findings into a single assessment."
+description: >-
+  Run a four-agent adversarial review on a technical spec or
+  implementation plan. Use when a spec or plan needs evaluation from
+  maintainability, security, efficiency, and completeness
+  perspectives. Spawns four reviewer agents in parallel and
+  consolidates their findings into a single assessment.
 ---
 
 # Spec Review

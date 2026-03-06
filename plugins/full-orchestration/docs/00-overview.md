@@ -38,7 +38,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
                │   (TddEngineer agent)    │
                │   Feature branch           │
                └────────────┬─────────────┘
-                            │ ✅ User approves implementation
+                            │ ✅ Tests pass — auto-proceeds
                             ▼
                ┌──────────────────────────┐
                │  Stage 4: Code Review     │

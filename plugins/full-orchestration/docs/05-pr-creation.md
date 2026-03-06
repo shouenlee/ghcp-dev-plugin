@@ -124,12 +124,12 @@ After the PR is created, the orchestrator updates the source ticket via MCP:
 ### Jira
 
 ```
-MCP tool: atlassian_jira_transition_issue
-  issue_key: PROJ-123
+MCP tool: transitionJiraIssue
+  issueIdOrKey: PROJ-123
   transition: "In Review"
 
-MCP tool: atlassian_jira_add_comment
-  issue_key: PROJ-123
+MCP tool: addCommentToJiraIssue
+  issueIdOrKey: PROJ-123
   body: "PR created: {pr_url}\n\nChanges: {summary}"
 ```
 
@@ -137,11 +137,11 @@ MCP tool: atlassian_jira_add_comment
 
 ```
 MCP tool: linear_update_issue
-  issue_id: LIN-456
+  issueId: LIN-456
   status: "In Review"
 
-MCP tool: linear_create_comment
-  issue_id: LIN-456
+MCP tool: linear_add_comment
+  issueId: LIN-456
   body: "PR created: {pr_url}\n\nChanges: {summary}"
 ```
 

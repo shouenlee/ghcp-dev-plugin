@@ -121,9 +121,9 @@ An `after_command` hook can suggest the `/swe` workflow when a user manually vie
   "hooks": [
     {
       "event": "after_command",
-      "pattern": "gh issue view",
+      "pattern": "^gh issue view",
       "action": "suggest",
-      "message": "Run /swe with this issue? The full-orchestration plugin can drive it from ticket to PR."
+      "message": "Tip: Use /swe to start the full software engineering pipeline for this ticket."
     }
   ]
 }

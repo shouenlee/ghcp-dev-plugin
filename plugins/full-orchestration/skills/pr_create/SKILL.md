@@ -1,6 +1,11 @@
 ---
 name: pr_create
-description: "Create a pull request from a reviewed implementation branch. Use when Stage 4 code review is approved and you are ready to open a PR. Generates a conventional-commit title, structured body with ticket link, spec summary, test results, and review findings, then creates the PR via gh CLI."
+description: >-
+  Create a pull request from a reviewed implementation branch. Use
+  when Stage 4 code review is approved and you are ready to open a
+  PR. Generates a conventional-commit title, structured body with
+  ticket link, spec summary, test results, and review findings, then
+  creates the PR via gh CLI.
 ---
 
 # PR Creation
@@ -77,8 +82,8 @@ Resolves [{ticket-id}]({ticket-url})
 
 | System | Action |
 |---|---|
-| Jira | MCP: `atlassian_jira_transition_issue` to "In Review" + `atlassian_jira_add_comment` |
-| Linear | MCP: `linear_update_issue` to "In Review" + `linear_create_comment` |
+| Jira | MCP: `transitionJiraIssue` to "In Review" + `addCommentToJiraIssue` |
+| Linear | MCP: `linear_update_issue` to "In Review" + `linear_add_comment` |
 | GitHub | Auto-linked via `Resolves #N`; add comment with `gh issue comment` |
 
 ---

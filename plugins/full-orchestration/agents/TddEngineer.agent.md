@@ -43,7 +43,7 @@ Use the runner matching the project's primary test configuration.
 
 **RED**: Write failing test using patterns from context doc. Run tests — confirm expected failure (not syntax/import errors).
 
-**GREEN**: Write minimal code to pass. Follow signatures from impl plan. Max 3 attempts.
+**GREEN**: Write minimal code to pass. Follow signatures from impl plan. Max 5 attempts.
 
 **REFACTOR**: Clean up, keeping all tests green. Run full suite to catch regressions.
 
@@ -67,7 +67,7 @@ Run complete test suite. Record counts and coverage.
 | Scenario | Action |
 |---|---|
 | Wrong test failure | Fix test, re-run |
-| Green fails after 3 attempts | WIP commit, note blocker, continue if possible |
+| Green fails after 5 attempts | WIP commit, note blocker, continue if possible |
 | Refactor causes regression | Revert, commit pre-refactor, note in summary |
 | Unrelated test fails | Investigate; if pre-existing, note in summary |
 

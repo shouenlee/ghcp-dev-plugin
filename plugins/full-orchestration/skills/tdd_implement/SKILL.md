@@ -1,6 +1,10 @@
 ---
 name: tdd_implement
-description: "Implement a ticket using test-driven development. Use when you have an approved spec and implementation plan and are ready to write code. Spawns a TDD engineer agent on a feature branch."
+description: >-
+  Implement a ticket using test-driven development. Use when you have
+  an approved spec and implementation plan and are ready to write
+  code. Spawns a TDD engineer agent on the feature branch specified
+  in the state file.
 ---
 
 # TDD Implement

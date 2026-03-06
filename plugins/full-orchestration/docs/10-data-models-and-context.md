@@ -38,7 +38,7 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
       "test_results": {
         "new_tests": 0,
         "modified_tests": 0,
-        "total_suite": "PASS | FAIL",
+        "total_suite": null,
         "coverage": null
       }
     },
@@ -59,7 +59,7 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
       "completed": false,
       "pr_number": null,
       "pr_url": null,
-      "title": "",
+      "title": null,
       "labels": [],
       "ticket_updated": false,
       "reviewers_requested": false
@@ -178,8 +178,8 @@ This enables resumption — `/swe PROJ-123 --from=implement` loads state and val
 
 | System | Method | Command / Tool |
 |---|---|---|
-| Jira | MCP | `atlassian_jira_get_issue` with `issue_key` |
-| Linear | MCP | `linear_get_issue` with `issue_id` |
+| Jira | MCP | `getJiraIssue` with `issueIdOrKey` |
+| Linear | MCP | `linear_get_issue` with `issueId` |
 | GitHub | CLI | `gh issue view <N> --json title,body,comments,labels,assignees,milestone` |
 | Generic | User-provided | curl command or API endpoint |
 
@@ -496,7 +496,7 @@ feat/PROJ-123
 
 ```
 RED   → Write failing test → run tests → confirm expected failure
-GREEN → Write minimal code → run tests → confirm pass (max 3 attempts)
+GREEN → Write minimal code → run tests → confirm pass (max 5 attempts)
 REFACTOR → Clean up → run full suite → confirm no regressions
 COMMIT → "feat({scope}): {what} [TDD step N/{total}]"
 ```
@@ -530,7 +530,7 @@ COMMIT → "feat({scope}): {what} [TDD step N/{total}]"
 | Scenario | Behavior |
 |---|---|
 | Red: test fails for wrong reason | Fix test, re-run |
-| Green: fails after 3 attempts | WIP commit, note blocker, continue if possible |
+| Green: fails after 5 attempts | WIP commit, note blocker, continue if possible |
 | Refactor: regression | Revert refactor, commit pre-refactor, note in summary |
 | Full suite: unrelated failure | Investigate; if pre-existing, note in summary |
 
@@ -739,8 +739,8 @@ Reviewed by: {reviewer agents}
 
 | System | Method | Action |
 |---|---|---|
-| Jira | MCP `atlassian_jira_transition_issue` + `atlassian_jira_add_comment` | Transition to "In Review" + comment with PR URL |
-| Linear | MCP `linear_update_issue` + `linear_create_comment` | Update status to "In Review" + comment with PR URL |
+| Jira | MCP `transitionJiraIssue` + `addCommentToJiraIssue` | Transition to "In Review" + comment with PR URL |
+| Linear | MCP `linear_update_issue` + `linear_add_comment` | Update status to "In Review" + comment with PR URL |
 | GitHub | `gh issue comment` | Comment with PR URL (auto-linked via `Resolves #N`) |
 
 ---
@@ -761,12 +761,12 @@ Reviewed by: {reviewer agents}
 | `.claude/swe-state/{ticket-id}/impl-summary.md` | TddEngineer | `code_review`, `pr_create` | Stage 3 onward |
 | `.claude/swe-state/{ticket-id}/review-iteration.md` | `code_review` (overwritten each iteration) | `code_review` (approval gate) | Stage 4 |
 | `.claude/swe-state/{ticket-id}/review-summary.md` | `code_review` | `pr_create` | Stage 4 onward |
+| `.claude/swe-state/{ticket-id}/review-context.md` | `spec_review` | 4 reviewer agents | Stage 2 onward |
 
 ### Ephemeral Files
 
 | Path | Created By | Read By | Lifecycle |
 |---|---|---|---|
-| `.claude/swe-state/{ticket-id}/review-context.md` | `spec_review` | 4 reviewer agents | Persisted (debugging/re-runs) |
 | `/tmp/deep_review-${CLAUDE_SESSION_ID}-context.yaml` | `deep_review` | Advocate, Skeptic, Architect | Deleted after synthesis |
 
 ---

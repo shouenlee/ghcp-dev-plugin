@@ -28,11 +28,13 @@ Fetch a ticket, parse requirements, present a summary for user confirmation.
 
 | Input Pattern | System | Fetch Method |
 |---|---|---|
-| URL with `atlassian.net` or `jira` | Jira | MCP: `atlassian_jira_get_issue` |
+| URL with `atlassian.net` or `jira` | Jira | MCP: `getJiraIssue` |
 | URL with `linear.app` | Linear | MCP: `linear_get_issue` |
 | URL with `github.com`, or bare `#N` | GitHub | `gh issue view` |
-| `PROJ-123` pattern | Jira (default) | MCP: `atlassian_jira_get_issue` |
+| `PROJ-123` pattern | Jira (default) | MCP: `getJiraIssue` |
 | Unrecognized | Unknown | Prompt user |
+
+> **Note:** Tool names are for the official Atlassian Rovo and Linear MCP servers. Community servers may use different names (e.g., `jira_get_issue` for `sooperset/mcp-atlassian`).
 
 Extract ticket ID from the input (Jira key from path, GitHub number, Linear ID).
 
@@ -40,12 +42,12 @@ Extract ticket ID from the input (Jira key from path, GitHub number, Linear ID).
 
 ## Phase 2: Fetch Ticket Data
 
-**Jira**: `atlassian_jira_get_issue` with `issue_key`. If MCP unavailable:
+**Jira**: `getJiraIssue` with `issueIdOrKey`. If MCP unavailable:
 ```
 claude mcp add --transport sse atlassian https://mcp.atlassian.com/v1/sse
 ```
 
-**Linear**: `linear_get_issue` with `issue_id`. If MCP unavailable:
+**Linear**: `linear_get_issue` with `issueId`. If MCP unavailable:
 ```
 claude mcp add --transport sse linear-server https://mcp.linear.app/sse
 ```

@@ -1,6 +1,11 @@
 ---
 name: spec_writer
-description: "Generate a technical spec and implementation plan for a ticket. Use when you have parsed requirements and need a detailed design before implementation. Orchestrates codebase exploration, spec authoring, adversarial review, implementation planning, and plan review across multiple agents."
+description: >-
+  Generate a technical spec and implementation plan for a ticket. Use
+  when you have parsed requirements and need a detailed design before
+  implementation. Orchestrates codebase exploration, spec authoring,
+  adversarial review, implementation planning, and plan review across
+  multiple agents.
 ---
 
 # Spec Writer

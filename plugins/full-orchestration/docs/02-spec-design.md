@@ -103,8 +103,6 @@ The `SpecArchitect` agent reads the ticket requirements and the Codebase Context
 ```markdown
 # Technical Spec: {ticket-title}
 **Ticket:** {ticket-id}
-**Author:** SpecArchitect agent
-**Status:** Draft | In Review | Approved
 
 ## 1. Requirements Summary
 - Restated requirements from the ticket
@@ -387,7 +385,7 @@ Every agent's inputs must exist before it runs. The table below traces each step
 
 The flow is strictly sequential (2A → 2B → 2C → 2D → 2E) with user approval gates between each step, so no agent runs before its inputs exist. Within 2A and 2C/2E, agents run in parallel but share no write dependencies — explorers produce independent output sections, and reviewers produce independent reviews consolidated by the orchestrator after all complete.
 
-### Stage 3: TDD Implementation
+### Cross-Reference: Stage 3 Inputs from Stage 2
 
 | Step | Component | Inputs Required | Produced By | Output File |
 |---|---|---|---|---|

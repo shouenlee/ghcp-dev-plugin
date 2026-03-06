@@ -142,11 +142,11 @@ The orchestrator passes data between stages through the state file. Each stage r
 
 | Stage | Reads | Writes |
 |-------|-------|--------|
-| 1 — Ticket Intake | Ticket ID (from CLI arg) | `ticket`: parsed requirements, acceptance criteria, affected areas |
-| 2 — Spec & Design | `ticket` | `spec`: technical spec, `impl_plan`: implementation steps |
-| 3 — TDD Implementation | `ticket`, `spec`, `impl_plan` | `branch`: name, `test_results`: pass/fail summary |
-| 4 — Code Review | `branch` | `review`: consolidated findings, `approved`: boolean |
-| 5 — PR Creation | `ticket`, `branch`, `review` | `pr_url`: the created PR URL |
+| 1 — Ticket Intake | Ticket ID (from CLI arg) | `stages.intake.ticket_file`, `stages.intake.source` |
+| 2 — Spec & Design | `stages.intake.ticket_file` | `stages.spec.spec_file`, `stages.spec.impl_plan_file`, `stages.spec.context_file` |
+| 3 — TDD Implementation | `stages.spec.*` files | `stages.implement.impl_summary_file`, `stages.implement.test_results` |
+| 4 — Code Review | `feature_branch`, `target_branch` | `stages.review.review_iteration_file`, `stages.review.review_summary_file`, `stages.review.approved` |
+| 5 — PR Creation | `stages.intake.ticket_file`, `stages.review.review_summary_file` | `stages.pr.pr_url`, `stages.pr.pr_number` |
 
 ### State File Structure
 

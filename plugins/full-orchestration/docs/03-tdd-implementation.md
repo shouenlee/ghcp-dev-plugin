@@ -197,7 +197,7 @@ This hook fires after edits to source files (not test files) and suggests runnin
 | Scenario | Agent Behavior |
 |---|---|
 | Red phase: test fails for wrong reason (syntax error, missing import) | Fix the test, re-run to confirm correct failure |
-| Green phase: test still fails after implementation | Iterate on implementation (max 3 attempts), then report blocker |
+| Green phase: test still fails after implementation | Iterate on implementation (max 5 attempts), then report blocker |
 | Refactor phase: previously passing test fails | Revert refactor, commit pre-refactor code, note in summary |
 | Full suite: unrelated test fails | Investigate if change caused it; if not, note as pre-existing failure |
 
@@ -220,7 +220,7 @@ If an unexpected dependency issue arises (missing transitive dependency, version
 
 ### Max Retry Policy
 
-Each TDD step has a maximum of 3 implementation attempts. If the agent cannot make the tests pass after 3 tries, it:
+Each TDD step has a maximum of 5 implementation attempts. If the agent cannot make the tests pass after 5 tries, it:
 
 1. Commits the current state with a `WIP:` prefix
 2. Adds a detailed note to the implementation summary explaining the blocker

@@ -360,7 +360,7 @@ The following entry must appear in both marketplace manifest files:
   },
   "source": "./plugins/full-orchestration",
   "category": "workflow",
-  "tags": ["orchestration", "agentic", "tdd", "pipeline", "software-engineering"]
+  "tags": ["orchestration", "agentic", "tdd", "code-review", "spec", "pipeline", "software-engineering"]
 }
 ```
 

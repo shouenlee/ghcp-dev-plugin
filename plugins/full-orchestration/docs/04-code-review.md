@@ -89,7 +89,7 @@ For full details on how context is gathered, agents are spawned, and synthesis w
                       │
                       ▼
                User decides:
-               approve / force-merge / abort
+               approve / iterate / abort
 ```
 
 ### Iteration steps
@@ -127,6 +127,8 @@ All findings are classified into one of four severity levels:
 ---
 
 ## Security Reviewer (Recommended Addition)
+
+> **Note:** The `full-orchestration` plugin already includes a `SecurityReviewer` agent used during spec and plan review (Stage 2). This section recommends adding a security-focused reviewer to the `deep-review` plugin for *code-level* review in Stage 4.
 
 For security-sensitive changes, consider adding a fourth reviewer focused on security. This agent would check for:
 

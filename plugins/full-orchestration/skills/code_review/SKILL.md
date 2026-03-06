@@ -1,6 +1,11 @@
 ---
 name: code_review
-description: "Run adversarial code review on a TDD implementation. Use when you have a completed implementation branch ready for review before PR creation. Delegates to the deep-review plugin for parallel three-agent analysis, classifies findings by severity, auto-fixes minor issues, and gates approval."
+description: >-
+  Run adversarial code review on a TDD implementation. Use when you
+  have a completed implementation branch ready for review before PR
+  creation. Delegates to the deep-review plugin for parallel
+  three-agent analysis, classifies findings by severity, auto-fixes
+  minor issues, and gates approval.
 ---
 
 # Code Review
@@ -94,11 +99,9 @@ Present: iterations, resolved/remaining counts, follow-up items, test status.
 Warn if critical findings remain unresolved.
 
 User chooses:
-- **Approve** → proceed to Stage 5
+- **Approve** → write final summary to `review_summary_file` path from state, proceed to Stage 5
 - **Iterate** → spawn TDD engineer with full context (see below), then return to Phase 2
 - **Abort** → stop pipeline
-
-Write final summary to `review_summary_file` path from state.
 
 ### Iterate: Full-Context TDD Engineer
 
@@ -118,7 +121,7 @@ prompt: |
     Summary:     {impl_summary_file from state}
 
   Review feedback:
-    Full review: {review_summary_file from state}
+    Full review: {review_iteration_file from state}
 
   User direction:
     {verbatim user instruction}

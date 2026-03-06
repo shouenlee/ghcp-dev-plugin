@@ -177,7 +177,7 @@
     },
     {
       "name": "full-orchestration",
-      "description": "Fully agentic software engineering pipeline — from ticket intake through spec design, TDD implementation, code review, and PR creation",
+      "description": "Fully agentic software engineering pipeline — from ticket intake through spec design, TDD implementation, code review, and PR creation. Orchestrates multiple agents and skills across five stages.",
       "version": "1.0.0",
       "author": {
         "name": "shouenlee",
