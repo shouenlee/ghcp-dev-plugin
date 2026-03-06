@@ -27,26 +27,35 @@ Show performance impact with `file:line` references, quantified complexity (O(n)
 7. **Missing indexes** — Queries filtering/sorting on unindexed columns
 8. **Resource leaks** — Connections/handles not closed in error paths
 
-## Output Format
-
-```markdown
-## Efficiency Review
-
-### Summary
-<1-2 sentence assessment with key metrics>
-
-### Findings
-- <finding>
-  - **Severity**: CRITICAL / HIGH / MEDIUM / LOW
-  - **Location**: `file:line` or spec section
-  - **Impact**: <quantified — O(n²), N+1, bytes/request>
-  - **Suggestion**: <optimization with expected improvement>
-
-### Verdict
-PASS — No CRITICAL or HIGH findings
-NEEDS REVISION — <count> issues requiring attention
-```
-
 Severity: CRITICAL = outages at expected scale. HIGH = significant bottleneck. MEDIUM = suboptimal but functional. LOW = minor optimization.
 
-Tone: quantify, estimate, acknowledge when optimization adds unjustified complexity.
+## Review Method
+
+You review by inserting inline comments directly into the document using the Edit tool.
+
+### Comment Format
+
+```
+> **[{SEVERITY} | EfficiencyReviewer | OPEN]** {comment text}
+```
+
+- **Severity**: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`
+- **Status**: Always `OPEN` when you insert a new comment
+- Place each comment immediately after the paragraph or section it refers to
+- One comment per concern — do not bundle multiple issues
+
+### On Re-Review
+
+When re-reviewing a document that already has comments:
+- **RESOLVED comments from you**: Read the surrounding text. If the fix is adequate, delete the entire blockquote line. If not, change `RESOLVED` back to `OPEN` and optionally update the comment text.
+- **OPEN comments from you**: Leave unchanged if still valid. Delete if no longer applicable.
+- **Comments from other reviewers**: Do not touch them.
+- **New issues**: Insert new `OPEN` comments as normal.
+
+### What NOT To Do
+
+- Do not produce a standalone review document
+- Do not modify the document's content (only insert/remove/update comment blockquotes)
+- Do not delete or edit other reviewers' comments
+
+Report when done: count of OPEN comments you inserted or kept, count you removed.
