@@ -4,15 +4,15 @@ description: >-
   Generate a technical spec and implementation plan for a ticket. Use
   when you have parsed requirements and need a detailed design before
   implementation. Orchestrates codebase exploration, spec authoring,
-  adversarial review, implementation planning, and plan review across
-  multiple agents.
+  autonomous review-fix loops, implementation planning, and plan
+  review-fix loops across multiple agents.
 ---
 
 # Spec Writer
 
 **State file**: `.claude/swe-state/{ticket-id}.json`
 
-Orchestrate Stage 2: explore codebase, generate spec, review it, produce implementation plan, review that too.
+Orchestrate Stage 2: explore codebase, generate spec, review-fix loop, produce implementation plan, review-fix loop.
 
 ## Usage
 
@@ -69,17 +69,61 @@ prompt: |
   Write spec to: {spec_file path from state}
 ```
 
-**User gate**: Present spec, wait for approval. Iterate on changes.
-
 ---
 
-## 2C: Spec Review
+## 2B↔2C: Spec Review-Fix Loop (max 5 rounds)
+
+Autonomous loop — no user interaction until convergence or cap.
+
+### Loop
 
 ```
-/spec_review {spec_file path from state}
+iteration = 0
+WHILE iteration < 5:
+    iteration += 1
+
+    1. Run /spec_review {spec_file path from state}
+       → Returns OPEN comment count by severity
+
+    2. IF 0 OPEN comments → CONVERGED → break
+
+    3. Spawn author agent to address comments:
+       subagent_type: full-orchestration:SpecArchitect
+       prompt: |
+         Review comments have been added to: {spec_file}
+
+         Read the document. For each comment marked OPEN:
+         1. Understand the reviewer's concern
+         2. Modify the relevant section to address it
+         3. Change the comment status from OPEN to RESOLVED
+
+         Do NOT delete comments. Do NOT add new content beyond
+         addressing the comments. Do NOT change sections with no comments.
+
+         When done, report: number of comments addressed, any you
+         couldn't resolve (with explanation).
+
+    4. Continue loop (next iteration re-reviews)
+
+IF iteration == 5 AND OPEN comments remain:
+    Report: "Spec review did not fully converge after 5 rounds.
+    {N} OPEN comments remain."
 ```
 
-**User gate**: Present findings. User can update spec and re-run, or approve.
+### Cleanup
+
+After loop exits (converged or capped):
+1. Read the spec file
+2. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**`
+3. Write the cleaned file back
+
+Update state: `stages.spec.spec_review_iterations = {iteration count}`
+
+### User Gate
+
+Present the clean spec to the user. If OPEN comments remained at cap, show them separately.
+
+User chooses: **Approve** → proceed to 2D. **Request changes** → user provides direction, re-enter loop.
 
 ---
 
@@ -93,17 +137,61 @@ prompt: |
   Write plan to: {impl_plan_file path from state}
 ```
 
-**User gate**: Present plan, wait for approval. Iterate on changes.
-
 ---
 
-## 2E: Plan Review
+## 2D↔2E: Impl Plan Review-Fix Loop (max 5 rounds)
+
+Same loop mechanics as 2B↔2C, but targeting the implementation plan.
+
+### Loop
 
 ```
-/spec_review {impl_plan_file path from state}
+iteration = 0
+WHILE iteration < 5:
+    iteration += 1
+
+    1. Run /spec_review {impl_plan_file path from state}
+       → Returns OPEN comment count by severity
+
+    2. IF 0 OPEN comments → CONVERGED → break
+
+    3. Spawn author agent to address comments:
+       subagent_type: full-orchestration:ImplPlanner
+       prompt: |
+         Review comments have been added to: {impl_plan_file}
+
+         Read the document. For each comment marked OPEN:
+         1. Understand the reviewer's concern
+         2. Modify the relevant section to address it
+         3. Change the comment status from OPEN to RESOLVED
+
+         Do NOT delete comments. Do NOT add new content beyond
+         addressing the comments. Do NOT change sections with no comments.
+
+         When done, report: number of comments addressed, any you
+         couldn't resolve (with explanation).
+
+    4. Continue loop (next iteration re-reviews)
+
+IF iteration == 5 AND OPEN comments remain:
+    Report: "Impl plan review did not fully converge after 5 rounds.
+    {N} OPEN comments remain."
 ```
 
-**User gate**: Present findings. This is the final gate before Stage 3. User can update plan and re-run, or approve.
+### Cleanup
+
+After loop exits (converged or capped):
+1. Read the impl plan file
+2. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**`
+3. Write the cleaned file back
+
+Update state: `stages.spec.impl_review_iterations = {iteration count}`
+
+### User Gate
+
+Present the clean impl plan to the user. If OPEN comments remained at cap, show them separately.
+
+User chooses: **Approve** → proceed to Stage 3. **Request changes** → user provides direction, re-enter loop.
 
 ---
 
