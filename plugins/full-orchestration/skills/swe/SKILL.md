@@ -80,8 +80,8 @@ mkdir -p .claude/specs
       "spec_file": ".claude/specs/{ticket-id}.md",
       "impl_plan_file": ".claude/specs/{ticket-id}-impl.md",
       "context_file": ".claude/specs/{ticket-id}-context.md",
-      "spec_review_file": ".claude/specs/{ticket-id}-review-spec.md",
-      "impl_review_file": ".claude/specs/{ticket-id}-review-impl.md"
+      "spec_review_iterations": 0,
+      "impl_review_iterations": 0
     },
     "implement": {
       "completed": false,
