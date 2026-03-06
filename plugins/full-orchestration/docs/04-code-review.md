@@ -36,73 +36,75 @@ For full details on how context is gathered, agents are spawned, and synthesis w
 
 ---
 
-## Review Iteration Loop
+## Review Loop: Three-Phase Architecture
 
 ```
-┌─────────────────────────────────┐
-│  Generate diff from branch       │
-│  (git diff main...feature)      │
-└──────────────┬──────────────────┘
+┌──────────────────────────────────────┐
+│  Phase A: Initial Full Review         │
+│  git diff {target}...{feature}       │
+│  /deep_review (full branch diff)     │
+└──────────────┬───────────────────────┘
+               │
+        ┌──────┴──────┐
+        │             │
+   No findings    Findings
+        │             │
+        │      ┌──────┴──────────┐
+        │      │ Critical?       │
+        │      │ YES → ask user  │
+        │      │ NO  → auto-fix  │
+        │      └──────┬──────────┘
+        │             │
+        │      ┌──────┴──────────┐
+        │      │ TddEngineer     │
+        │      │ applies fixes   │
+        │      │ records snapshot│
+        │      └──────┬──────────┘
+        │             │
+        ▼             ▼
+┌──────────────────────────────────────┐
+│  Phase B: Incremental Fix Loop       │◄────────────┐
+│  git diff {snapshot}...HEAD          │             │
+│  /deep_review (fix changes only)     │             │
+└──────────────┬───────────────────────┘             │
+               │                                     │
+        ┌──────┴──────┐                              │
+        │             │                              │
+   Converged     Findings                            │
+   (0 C/M/Mi)        │                              │
+        │      ┌──────┴──────────┐                   │
+        │      │ Critical → user │                   │
+        │      │ Major → auto-fix│                   │
+        │      │ Minor → auto-fix│                   │
+        │      └──────┬──────────┘                   │
+        │             │                              │
+        │      TddEngineer fixes                     │
+        │             │                              │
+        │      iteration < 5? ─── Yes ───────────────┘
+        │             │
+        │          No (capped)
+        │             │
+        ▼             ▼
+┌──────────────────────────────────────┐
+│  Phase C: Final Validation Review     │
+│  git diff {target}...{feature}       │
+│  /deep_review (full branch diff)     │
+│  Compare vs Phase A findings          │
+└──────────────┬───────────────────────┘
                │
                ▼
-┌─────────────────────────────────┐
-│  Invoke /deep_review on diff    │
-│  (3 agents in parallel)         │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│  Collect & consolidate feedback │
-│  Assign severity ratings        │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│  Present findings to user       │◄──────────────┐
-└──────────────┬──────────────────┘               │
-               │                                  │
-        ┌──────┴──────┐                           │
-        │             │                           │
-   No issues     Issues found                     │
-        │             │                           │
-        ▼             ▼                           │
-   Approved    ┌──────────────┐                   │
-               │ Auto-fix     │                   │
-               │ minor issues │                   │
-               │              │                   │
-               │ Present major│                   │
-               │ issues for   │                   │
-               │ user decision│                   │
-               └──────┬───────┘                   │
-                      │                           │
-                      ▼                           │
-               ┌──────────────┐                   │
-               │ TDD engineer │                   │
-               │ re-implements│                   │
-               │ fixes        │                   │
-               └──────┬───────┘                   │
-                      │                           │
-                      ▼                           │
-               Iteration < 3? ─── Yes ────────────┘
-                      │
-                      No
-                      │
-                      ▼
-               User decides:
-               approve / iterate / abort
+┌──────────────────────────────────────┐
+│  Approval Gate (always)               │
+│  User: approve / iterate / abort     │
+└──────────────────────────────────────┘
 ```
 
-### Iteration steps
+### Phase details
 
-1. **Spawn review agents** — The orchestrator invokes `/deep_review` against the current diff between the feature branch and the target branch.
-2. **Collect feedback** — Each agent's raw analysis is preserved, then consolidated into a structured review document with severity ratings.
-3. **Present findings** — The user sees the consolidated review with all findings categorized by severity.
-4. **Fix cycle** — If changes are needed:
-   - **Minor issues** (naming, style, small optimizations) are auto-fixed by the orchestrator or TDD engineer without user intervention.
-   - **Major and critical issues** are presented to the user, who decides whether to fix, defer, or dismiss each one.
-5. **TDD engineer re-implements** — Accepted fixes go back to the [Stage 3 TDD engineer](03-tdd-implementation.md), who applies them while keeping tests green.
-6. **Re-review** — The updated diff is sent through another review cycle (max 3 iterations).
-7. **Final decision** — If issues persist after 3 iterations, the user chooses: approve as-is, continue iterating manually, or abort.
+1. **Phase A — Initial full review**: The orchestrator runs `/deep_review` against the complete branch diff. Critical findings pause for user input. Major and Minor findings are auto-fixed by the TDD engineer. A git snapshot is recorded after fixes.
+2. **Phase B — Incremental fix loop**: Subsequent iterations review only the diff since the last snapshot (fix changes only). The loop converges when a re-review returns 0 Critical + 0 Major + 0 Minor findings. Max 5 total iterations (including Phase A). If capped without convergence, proceeds to Phase C with a warning.
+3. **Phase C — Final validation**: One last full-branch review catches interaction bugs that incremental reviews missed. Findings are compared to Phase A to identify regressions vs persistent issues. Does not re-enter the auto-fix loop — any remaining Critical/Major are presented at the approval gate.
+4. **Approval gate**: Always reached. User sees iteration count, findings breakdown (resolved, auto-fixed, dismissed, remaining), and test status. User chooses approve, iterate (back to Phase B with direction), or abort.
 
 ---
 
@@ -119,10 +121,10 @@ All findings are classified into one of four severity levels:
 
 ### How severities drive the loop
 
-- **Critical** findings block approval. The iteration loop continues until they are resolved or the user explicitly overrides.
-- **Major** findings are presented for user decision. The user can accept the fix, defer to a follow-up ticket, or dismiss with rationale.
-- **Minor** findings are auto-fixed when possible. If auto-fix fails, they are presented as suggestions.
-- **Suggestions** are collected into a "Follow-up Items" section in the review output and optionally included in the PR description.
+- **Critical** findings break the auto-loop. The orchestrator pauses immediately and presents Critical findings for user decision: fix (with direction), dismiss (with rationale), or abort. Dismissed Criticals are recorded in state.
+- **Major** findings are auto-fixed by the TDD engineer. No user input required — the re-review in subsequent iterations validates the fix.
+- **Minor** findings are auto-fixed. If auto-fix fails, they are demoted to suggestions.
+- **Suggestions** are collected into a "Follow-up Items" section and do not block convergence.
 
 ---
 
@@ -144,12 +146,18 @@ This can be implemented as an additional agent in the `deep-review` plugin or as
 
 ## Approval Gate
 
-After the review loop completes (either all issues resolved or user override), the orchestrator presents the final review summary and waits for explicit user approval before proceeding to [Stage 5: PR Creation](05-pr-creation.md).
+After the three-phase review completes, the orchestrator **always** presents a summary and waits for explicit user approval before proceeding to [Stage 5: PR Creation](05-pr-creation.md).
 
 The approval prompt includes:
-- Final consolidated review with all findings and their resolutions
-- List of any deferred or dismissed issues
+- Iterations completed and phase reached (converged / capped / validation findings)
+- Findings breakdown: resolved, auto-fixed, remaining, dismissed (with rationale)
+- Follow-up items (suggestions collected across all phases)
 - Confirmation that all tests still pass after review fixes
+
+User chooses:
+- **Approve** — proceed to Stage 5
+- **Iterate** — spawn TDD engineer with full context + user direction, return to Phase B
+- **Abort** — stop pipeline
 
 ---
 
