@@ -29,8 +29,8 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
       "spec_file": ".claude/specs/PROJ-123.md",
       "impl_plan_file": ".claude/specs/PROJ-123-impl.md",
       "context_file": ".claude/specs/PROJ-123-context.md",
-      "spec_review_file": ".claude/specs/PROJ-123-review-spec.md",
-      "impl_review_file": ".claude/specs/PROJ-123-review-impl.md"
+      "spec_review_iterations": 0,
+      "impl_review_iterations": 0
     },
     "implement": {
       "completed": false,
@@ -304,75 +304,25 @@ Ambiguities needing user input, design trade-offs.
 | Reads | `ticket.json`, `{ticket-id}-context.md`, referenced source files |
 | Writes | `.claude/specs/{ticket-id}.md` |
 
-### 2C — Spec Review
+### 2C — Spec Review (Inline Comments)
 
-**Path**: `.claude/specs/{ticket-id}-review-spec.md`
-**Producer**: `spec_review` skill (consolidates 4 reviewer outputs)
-**Consumer**: `spec_writer` (presents to user)
+**Producer**: `spec_review` skill (4 reviewers insert inline comments into `{ticket-id}.md`)
+**Consumer**: `spec_writer` (counts OPEN comments, spawns SpecArchitect to address them)
 
-### 2E — Implementation Plan Review
+No separate review file. Reviewers insert blockquote comments directly into the spec:
 
-**Path**: `.claude/specs/{ticket-id}-review-impl.md`
-**Producer**: `spec_review` skill (same skill, different mode)
-**Consumer**: `spec_writer` (presents to user)
-
-#### Consolidated Review Format (shared by 2C and 2E)
-
-```markdown
-# Consolidated Review: {ticket-id} ({spec|impl})
-
-## Summary
-| Severity | Count |
-|---|---|
-| CRITICAL | N |
-| HIGH | N |
-| MEDIUM | N |
-| LOW | N |
-
-**Verdict**: PASS | NEEDS REVISION
-
-## CRITICAL Issues
-## HIGH Issues
-## MEDIUM Suggestions
-## LOW Suggestions
-
-## Reviewer Perspectives
-### Maintainability
-### Security
-### Efficiency
-### Completeness
+```
+> **[{SEVERITY} | {ReviewerName} | OPEN]** {comment text}
 ```
 
-**Verdict logic**: PASS = zero CRITICAL + zero HIGH. NEEDS REVISION = any CRITICAL or HIGH.
+After the review-fix loop converges (0 OPEN comments or 5 rounds), `spec_writer` strips all remaining RESOLVED markers before presenting to the user.
 
-#### Review Context File (ephemeral)
+### 2E — Implementation Plan Review (Inline Comments)
 
-**Path**: `.claude/swe-state/{ticket-id}/review-context.md`
+**Producer**: `spec_review` skill (same skill, impl mode — reviewers insert inline comments into `{ticket-id}-impl.md`)
+**Consumer**: `spec_writer` (counts OPEN comments, spawns ImplPlanner to address them)
 
-Written by `spec_review` before spawning reviewers. Contains the document under review, ticket data, codebase context, and review mode instructions — all in one file so each reviewer reads a single document.
-
-```markdown
-# Review Context: {ticket-id}
-
-## Review Metadata
-- **Document path**: {path}
-- **Document type**: spec | impl
-- **Review mode**: spec | impl
-- **Ticket ID**: {ticket-id}
-
-## Document Under Review
-{full content}
-
-## Ticket
-{ticket.json content or "Not available"}
-
-## Codebase Context
-{context doc content or "Not available"}
-
-## Instructions
-You are reviewing this document from your specialized perspective.
-Review mode is "{review_mode}" — use your corresponding review focus.
-```
+Same inline comment mechanics as 2C. No separate review file.
 
 #### Reviewer Agents
 
@@ -786,13 +736,10 @@ Reviewed by: {reviewer agents}
 | `.claude/swe-state/{ticket-id}/ticket.json` | `ticket_intake` | `spec_writer`, `spec_review`, `pr_create` | Entire pipeline |
 | `.claude/specs/{ticket-id}-context.md` | `spec_writer` (2A) | SpecArchitect, ImplPlanner, TddEngineer, code_review iterate | Entire pipeline |
 | `.claude/specs/{ticket-id}.md` | SpecArchitect (2B) | spec_review (2C), ImplPlanner (2D), TddEngineer, code_review iterate, pr_create | Entire pipeline |
-| `.claude/specs/{ticket-id}-review-spec.md` | spec_review (2C) | `spec_writer` (user presentation) | Entire pipeline |
 | `.claude/specs/{ticket-id}-impl.md` | ImplPlanner (2D) | spec_review (2E), TddEngineer, code_review iterate, pr_create | Entire pipeline |
-| `.claude/specs/{ticket-id}-review-impl.md` | spec_review (2E) | `spec_writer` (user presentation) | Entire pipeline |
 | `.claude/swe-state/{ticket-id}/impl-summary.md` | TddEngineer | `code_review`, `pr_create` | Stage 3 onward |
 | `.claude/swe-state/{ticket-id}/review-iteration.md` | `code_review` (overwritten each iteration) | `code_review` (approval gate) | Stage 4 |
 | `.claude/swe-state/{ticket-id}/review-summary.md` | `code_review` | `pr_create` | Stage 4 onward |
-| `.claude/swe-state/{ticket-id}/review-context.md` | `spec_review` | 4 reviewer agents | Stage 2 onward |
 
 ### Ephemeral Files
 
@@ -815,14 +762,12 @@ ticket.json ──────────────► spec_writer
                             ├─ 2B: SpecArchitect ──► spec.md ────────► TddEngineer ──► code_review ──► pr_create
                             │                           │                               (iterate loop)
                             │                           ▼
-                            ├─ 2C: spec_review ──► review-spec.md
-                            │       (reads review-context.md)
+                            ├─ 2B↔2C: review-fix loop (inline comments in spec.md)
                             │
                             ├─ 2D: ImplPlanner ──► impl.md ──────────► TddEngineer ──► code_review
                             │                        │                                  (iterate loop)
                             │                        ▼
-                            └─ 2E: spec_review ──► review-impl.md
-                                    (reads review-context.md)
+                            └─ 2D↔2E: review-fix loop (inline comments in impl.md)
 
                                                                         TddEngineer
                                                                             │
@@ -856,10 +801,10 @@ ticket.json ──────────────► spec_writer
 |---|---|---|---|---|
 | Explore (×3-5) | built-in | — | Read-only | Codebase exploration (2A) |
 | SpecArchitect | full-orchestration | opus | Read, Grep, Write | Spec authoring (2B) |
-| MaintainabilityReviewer | full-orchestration | sonnet | Read, Grep | Spec/plan review (2C/2E) |
-| SecurityReviewer | full-orchestration | sonnet | Read, Grep | Spec/plan review (2C/2E) |
-| EfficiencyReviewer | full-orchestration | sonnet | Read, Grep | Spec/plan review (2C/2E) |
-| CompletenessReviewer | full-orchestration | sonnet | Read, Grep | Spec/plan review (2C/2E) |
+| MaintainabilityReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
+| SecurityReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
+| EfficiencyReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
+| CompletenessReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | ImplPlanner | full-orchestration | opus | Read, Glob, Grep, Write | Impl planning (2D) |
 | TddEngineer | full-orchestration | opus | Read, Grep, Glob, Edit, Write, Bash | Implementation (3) + review fixes (4) |
 | Advocate | deep-review | (per def) | Read-only | Code review — defense (4) |
@@ -873,10 +818,8 @@ ticket.json ──────────────► spec_writer
 | Stage | Gate | What User Reviews | Options |
 |---|---|---|---|
 | 1 | After intake | Parsed ticket summary | Confirm / Edit / Re-fetch |
-| 2B | After spec | Technical spec | Approve / Request changes |
-| 2C | After spec review | Consolidated review findings | Approve / Update spec + re-review |
-| 2D | After impl plan | Implementation plan | Approve / Request changes |
-| 2E | After plan review | Consolidated review findings | Approve / Update plan + re-review |
+| 2B↔2C | After spec review-fix loop | Clean spec (review comments resolved and stripped) | Approve / Request changes |
+| 2D↔2E | After impl plan review-fix loop | Clean impl plan (review comments resolved and stripped) | Approve / Request changes |
 | 4 | After review loop | Final review + remaining findings | Approve / Iterate / Abort |
 | 5 | Before PR creation | PR title, labels, body preview | Create / Edit / Cancel |
 | 5 | Before push | `git push -u origin {branch}` | Confirm / Cancel |
