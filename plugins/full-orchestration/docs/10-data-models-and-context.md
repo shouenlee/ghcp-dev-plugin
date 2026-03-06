@@ -616,10 +616,10 @@ structured-findings -->
 
 | deep-review Priority | Pipeline Severity | Action |
 |---|---|---|
-| Critical | **Critical** | Blocks merge — must fix before approval |
-| High | **Major** | User decides: fix, defer, or dismiss |
-| Medium | **Minor** | Auto-fix when possible |
-| Low | **Suggestion** | Collect for follow-up items |
+| Critical | **Critical** | Breaks auto-loop — user decides: fix, dismiss, or abort |
+| High | **Major** | Auto-fix via TddEngineer; no user input required |
+| Medium | **Minor** | Auto-fix via TddEngineer; demote to suggestion if fix fails |
+| Low | **Suggestion** | Collect for follow-up items; does not block convergence |
 
 ### Review Iteration File
 
