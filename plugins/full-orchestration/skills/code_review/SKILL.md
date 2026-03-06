@@ -30,7 +30,7 @@ Report: ticket ID, branches, strategy (three-phase: initial → incremental (max
 
 If `/deep_review` is unavailable: stop and show `/plugin install deep-review@ghcp-dev-plugin`.
 
-Record initial snapshot: `last_review_commit = git rev-parse {target_branch}` (the base before any review fixes).
+Record initial snapshot: `last_review_commit = git rev-parse {target_branch}` (the base before any review fixes). Set `stages.review.phase = "initial"`.
 
 ---
 
@@ -64,6 +64,8 @@ Parse `<!-- structured-findings ... -->` from deep-review output. Schema contrac
 Fallback: extract from `**Priority**: ...` lines if block missing.
 
 Map priorities: Critical→Critical, High→Major, Medium→Minor, Low→Suggestion.
+
+Write the consolidated review to `review_iteration_file` path from state (overwritten each iteration).
 
 ### 2A.3 Handle by Severity
 
@@ -116,7 +118,7 @@ Otherwise:
 
 ### 2B.2 Parse and Check Convergence
 
-Parse findings (same schema as 2A.2).
+Parse findings (same schema as 2A.2). Write consolidated review to `review_iteration_file`.
 
 **Converged** = 0 Critical + 0 Major + 0 Minor in the incremental diff. Suggestions do not block convergence.
 

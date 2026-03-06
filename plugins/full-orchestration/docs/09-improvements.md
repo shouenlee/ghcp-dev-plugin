@@ -53,7 +53,7 @@ This keeps stakeholders informed without anyone manually updating the ticket. Re
 
 ## Rollback Plans
 
-When the review loop hits the iteration limit (default: 3) without resolving all concerns:
+When the review loop hits the iteration limit (default: 5) without resolving all concerns:
 
 - **Auto-create a sub-ticket** for unresolved review findings, linked to the original ticket.
 - **Proceed with the PR anyway** if the unresolved items are non-critical (informational or low-severity findings).

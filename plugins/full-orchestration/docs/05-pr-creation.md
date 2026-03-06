@@ -110,7 +110,7 @@ Reviewed by: skeptic, advocate, architect (deep-review plugin)
 ## Checklist
 
 - [x] Tests pass locally
-- [x] Code review completed (3 iterations)
+- [x] Code review completed ({N} iterations)
 - [x] No critical or major findings remaining
 - [ ] CI pipeline (pending)
 ```

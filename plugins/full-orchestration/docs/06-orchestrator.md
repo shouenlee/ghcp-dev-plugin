@@ -76,7 +76,7 @@ Each stage skill owns its own approval gates — the orchestrator does not add a
 | 1 — Ticket Intake | `ticket_intake` | User confirms the parsed requirements summary |
 | 2 — Spec & Design | `spec_writer` | User approves spec (2B), spec review (2C), impl plan (2D), impl review (2E) |
 | 3 — TDD Implementation | `tdd_implement` | None (reports results; orchestrator proceeds) |
-| 4 — Code Review | `code_review` | User chooses: Approve / Iterate (re-enter Stage 3) / Continue manually / Abort |
+| 4 — Code Review | `code_review` | User chooses: Approve / Iterate (re-enter Phase 2B within code_review) / Abort |
 | 5 — PR Creation | `pr_create` | User confirms PR preview before creation |
 
 If the user aborts within a stage, the skill reports the abort and the orchestrator saves state for later resumption.

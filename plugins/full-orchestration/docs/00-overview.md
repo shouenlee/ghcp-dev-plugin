@@ -78,7 +78,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 
 3. **TDD Implementation** — A `TddEngineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
 
-4. **Code Review** — Delegates to the `deep-review` plugin. Three agents (skeptic, advocate, architect) review the diff from independent perspectives and produce a consolidated assessment.
+4. **Code Review** — Delegates to the `deep-review` plugin for a three-phase auto-converging review. Phase A reviews the full branch diff, Phase B iteratively re-reviews only fix changes (up to 5 iterations), and Phase C runs a final full-branch validation. Minor and Major findings are auto-fixed; only Critical findings pause for user input.
 
 5. **PR Creation** — Creates a PR via the `gh` CLI with a structured description, links the original ticket, and includes the review summary.
 

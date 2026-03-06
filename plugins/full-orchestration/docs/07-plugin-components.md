@@ -182,15 +182,15 @@ Location: `plugins/full-orchestration/skills/code_review/SKILL.md`
 ---
 name: code_review
 description: >-
-  Run adversarial code review on a TDD implementation. Use when
-  you have a completed implementation branch ready for review
-  before PR creation. Delegates to the deep-review plugin for
-  parallel three-agent analysis, classifies findings by severity,
-  auto-fixes minor issues, and gates approval.
+  Run adversarial code review with auto-converging fix loop. Use when you
+  have a completed implementation branch ready for review before PR
+  creation. Delegates to deep-review for three-agent analysis, auto-fixes
+  Minor and Major findings, pauses only on Critical, and runs a final
+  validation review before gating user approval.
 ---
 ```
 
-**Body contains:** Instructions for validating that Stage 3 is complete, checking out the feature branch and invoking `/deep_review` (which gathers its own diff context) for parallel three-agent analysis (Advocate, Skeptic, Architect), mapping findings to four severity levels (Critical/Major/Minor/Suggestion), presenting findings to the user, auto-fixing minor issues, escalating major and critical issues for user decision, spawning the TDD engineer for accepted fixes, iterating up to 3 times, and gating approval before Stage 5.
+**Body contains:** Instructions for validating that Stage 3 is complete, running a three-phase auto-converging review loop: Phase 2A (full branch diff review), Phase 2B (incremental fix loop on changes only, up to 5 iterations), Phase 2C (final full-branch validation). Auto-fixes Minor and Major findings via TddEngineer, pauses only on Critical for user decision, and gates approval before Stage 5.
 
 ### pr_create/SKILL.md
 

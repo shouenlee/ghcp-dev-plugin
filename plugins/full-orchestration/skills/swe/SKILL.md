@@ -96,14 +96,17 @@ mkdir -p .claude/specs
     "review": {
       "completed": false,
       "approved": false,
+      "last_review_commit": null,
       "iterations": 0,
+      "phase": null,
       "review_iteration_file": ".claude/swe-state/{ticket-id}/review-iteration.md",
       "review_summary_file": ".claude/swe-state/{ticket-id}/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
-        "major": { "total": 0, "fixed": 0, "deferred": 0, "dismissed": 0 },
-        "minor": { "total": 0, "fixed": 0 },
-        "suggestions": 0
+        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "deferred": 0, "dismissed": 0 },
+        "minor": { "total": 0, "fixed": 0, "auto_fixed": 0 },
+        "suggestions": 0,
+        "dismissed": []
       }
     },
     "pr": {
