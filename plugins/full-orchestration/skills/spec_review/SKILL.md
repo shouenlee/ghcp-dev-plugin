@@ -1,18 +1,18 @@
 ---
 name: spec_review
 description: >-
-  Run a four-agent adversarial review on a technical spec or
+  Run a four-agent inline comment review on a technical spec or
   implementation plan. Use when a spec or plan needs evaluation from
-  maintainability, security, efficiency, and completeness
-  perspectives. Spawns four reviewer agents in parallel and
-  consolidates their findings into a single assessment.
+  maintainability, security, efficiency, and completeness perspectives.
+  Spawns four reviewer agents that insert OPEN blockquote comments
+  directly into the document.
 ---
 
 # Spec Review
 
 **State file**: `.claude/swe-state/{ticket-id}.json`
 
-Four parallel reviewer agents evaluate a document from different perspectives, then findings are consolidated.
+Four parallel reviewer agents insert inline comments directly into the document under review.
 
 ## Usage
 
@@ -27,59 +27,45 @@ Four parallel reviewer agents evaluate a document from different perspectives, t
 
 **Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix).
 
-**Read state** to get paths: `stages.spec.spec_review_file` (spec mode) or `stages.spec.impl_review_file` (impl mode) for the output path. Also read `stages.intake.ticket_file` and `stages.spec.context_file`.
+**Read state** to get: `stages.intake.ticket_file` and `stages.spec.context_file`.
 
-**Read**: document under review, ticket.json, context doc. Proceed with what's available — document under review is the minimum.
-
-**Write shared context** to `.claude/swe-state/{ticket-id}/review-context.md`:
-
-```markdown
-# Review Context: {ticket-id}
-
-## Review Metadata
-- **Document path**: {path}
-- **Review mode**: spec | impl
-
-## Document Under Review
-{full content}
-
-## Ticket
-{ticket.json content, or "Not available"}
-
-## Codebase Context
-{context doc content, or "Not available"}
-
-## Instructions
-Review from your specialized perspective. Use your corresponding review focus for mode "{review_mode}".
-```
-
-Verify the file exists before Phase 2.
+**Read**: document under review (required), ticket.json (if available), context doc (if available).
 
 ---
 
-## Phase 2: Parallel Review
+## Phase 2: Parallel Inline Review
 
 Spawn FOUR agents in a SINGLE message:
 
 ```
 subagent_type: full-orchestration:{ReviewerName}
 prompt: |
-  Read the review context: .claude/swe-state/{ticket-id}/review-context.md
-  Produce your review in the format specified in your agent instructions.
+  Review this document by inserting inline comments: {doc_path}
+
+  Supporting context:
+  - Ticket: {ticket_file path from state}
+  - Codebase context: {context_file path from state}
+
+  Review mode: {spec|impl}
+  Read the document and supporting files, then insert your review comments
+  as inline blockquotes using your standard comment format.
 ```
 
 Agents: `MaintainabilityReviewer`, `SecurityReviewer`, `EfficiencyReviewer`, `CompletenessReviewer`.
 
-On agent failure: offer re-trigger, proceed without, or abort.
+On agent failure: log warning, proceed with remaining agents.
 
 ---
 
-## Phase 3: Consolidation
+## Phase 3: Count and Report
 
-1. **Group** findings by severity: CRITICAL → HIGH → MEDIUM → LOW
-2. **Deduplicate**: merge same-issue findings, tag `[Multi-reviewer]` for 2+ agreement
-3. **Write** consolidated review to the output path from state (`spec_review_file` or `impl_review_file`)
+After all agents complete, read the document and count blockquote comments matching:
 
-**Verdict**: PASS (zero CRITICAL + zero HIGH) or NEEDS REVISION.
+```
+> **[{SEVERITY} | {Reviewer} | OPEN]**
+```
 
-Present summary to user: counts by severity, verdict, output file path.
+Report to caller:
+- Count by severity: CRITICAL, HIGH, MEDIUM, LOW
+- Total OPEN comments
+- No verdict — the caller (spec_writer) decides convergence
