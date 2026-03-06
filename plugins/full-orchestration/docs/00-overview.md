@@ -74,7 +74,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 
 1. **Ticket Intake** — Fetches ticket from Jira, Linear, or GitHub Issues. Parses requirements and acceptance criteria. Presents a summary for user confirmation.
 
-2. **Spec & Design** — An explorer team fans out across the codebase to identify affected areas. The spec architect synthesizes findings into a technical spec. A review team of four specialists (maintainability, security, efficiency, completeness) evaluates the spec. An implementation planner produces a step-by-step build plan. A final review validates the plan.
+2. **Spec & Design** — An explorer team fans out across the codebase to identify affected areas. The spec architect synthesizes findings into a technical spec. Four specialist reviewers (maintainability, security, efficiency, completeness) insert inline comments directly into the spec, and the spec architect addresses them in an autonomous loop (up to 5 rounds). An implementation planner produces a step-by-step build plan, which goes through the same review-fix loop. The user sees only the final clean documents.
 
 3. **TDD Implementation** — A `TddEngineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
 
