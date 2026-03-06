@@ -90,6 +90,8 @@ prompt: |
   Do NOT modify beyond scope of these fixes.
 ```
 
+**On TddEngineer failure**: If the agent errors or reports it cannot fix a finding: demote Minor findings to Suggestion (non-blocking). For Major findings, present the failure to the user with options: **retry** (with additional direction), **dismiss** (with rationale), or **abort**. Do not silently swallow failures.
+
 ### 2A.5 Record Snapshot
 
 After fixes are committed: `last_review_commit = git rev-parse HEAD`. Update state. Set `stages.review.phase = "incremental"`. Increment `stages.review.iterations`. Proceed to Phase 2B.
@@ -102,7 +104,13 @@ If no actionable findings (only suggestions) → skip to Phase 2C.
 
 Repeat until converged or iteration cap (5 total iterations including Phase 2A):
 
-### 2B.1 Incremental Diff and Review
+### 2B.1 Pre-Diff Checks
+
+**Rebase guard**: Verify `last_review_commit` is reachable: `git merge-base --is-ancestor {last_review_commit} HEAD`. If unreachable (exit code 1), the branch was rebased — reset snapshot to target branch: `last_review_commit = git rev-parse {target_branch}` and log a warning.
+
+**Unexpected commit detection**: Compare `git rev-parse HEAD` against the expected HEAD after the last TddEngineer run. If HEAD has advanced by commits not made by the auto-fix agent, warn: "Detected {N} commits not from the auto-fix agent. These will be included in the incremental review."
+
+### 2B.2 Incremental Diff and Review
 
 ```bash
 git diff {last_review_commit}...HEAD
@@ -116,7 +124,9 @@ Otherwise:
 /deep_review --base={last_review_commit} --head=HEAD
 ```
 
-### 2B.2 Parse and Check Convergence
+**On `/deep_review` failure**: If the plugin errors or times out mid-loop, retry once. If it fails again, present the error to the user with options: **retry**, **skip to approval gate** (proceed to Phase 3 with a warning that final validation was not completed), or **abort**.
+
+### 2B.3 Parse and Check Convergence
 
 Parse findings (same schema as 2A.2). Write consolidated review to `review_iteration_file`.
 
@@ -124,17 +134,17 @@ Parse findings (same schema as 2A.2). Write consolidated review to `review_itera
 
 If converged → proceed to Phase 2C.
 
-### 2B.3 Handle Findings
+### 2B.4 Handle Findings
 
 Same severity handling as 2A.3:
 - **Critical**: STOP, present to user, get direction.
 - **Major + Minor**: auto-fix via TddEngineer.
 
-### 2B.4 Apply Fixes and Update Snapshot
+### 2B.5 Apply Fixes and Update Snapshot
 
-Same as 2A.4. After fixes: `last_review_commit = git rev-parse HEAD`. Increment `stages.review.iterations`.
+Same as 2A.4 (including failure handling). After fixes: `last_review_commit = git rev-parse HEAD`. Increment `stages.review.iterations`.
 
-### 2B.5 Iteration Cap
+### 2B.6 Iteration Cap
 
 If total iterations = 5 and not converged → hard stop. Set `stages.review.phase = "capped"`. Proceed to approval gate (Phase 3) with warning that convergence was not reached.
 
