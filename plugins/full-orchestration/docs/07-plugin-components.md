@@ -130,11 +130,11 @@ Location: `plugins/full-orchestration/skills/spec_writer/SKILL.md`
 ---
 name: spec_writer
 description: >-
-  Generate a technical spec and implementation plan for a ticket.
-  Use when you have parsed requirements and need a detailed
-  design before implementation. Orchestrates codebase exploration,
-  spec authoring, adversarial review, implementation planning,
-  and plan review across multiple agents.
+  Generate a technical spec and implementation plan for a ticket. Use
+  when you have parsed requirements and need a detailed design before
+  implementation. Orchestrates codebase exploration, spec authoring,
+  autonomous review-fix loops, implementation planning, and plan
+  review-fix loops across multiple agents.
 ---
 ```
 
