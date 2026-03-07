@@ -228,7 +228,7 @@ model: opus
 
 **Role:** Receives the ticket requirements and codebase exploration results from Stage 2A. Produces a structured technical spec covering: problem statement, proposed approach, affected components, data model changes, API changes, edge cases, and testing strategy. Writes the spec as a markdown document.
 
-**Tools used:** Read (to examine code referenced by explorers), Grep (to verify assumptions about existing patterns), Write (to produce the spec document).
+**Tools used:** Read (to examine code referenced by explorers), Grep (to verify assumptions about existing patterns), Edit (to address review comments inline during 2B↔2C loop), Write (to produce the spec document).
 
 **Behavior:** Prioritizes clarity and completeness. Explicitly calls out assumptions, risks, and open questions. Structures the spec so reviewers can evaluate each section independently.
 
@@ -246,7 +246,7 @@ model: opus
 
 **Role:** Takes the reviewed technical spec from Stage 2C and produces a detailed implementation plan. Each step specifies: the file(s) to modify or create, what changes to make, the test(s) to write for that step, and the expected behavior after the step is complete.
 
-**Tools used:** Read (to examine current file contents), Glob (to verify file paths), Grep (to find existing patterns to follow).
+**Tools used:** Read (to examine current file contents), Glob (to verify file paths), Grep (to find existing patterns to follow), Edit (to address review comments inline during 2D↔2E loop).
 
 **Behavior:** Produces steps ordered for TDD — each step starts with the test, then the implementation. Follows existing code conventions discovered during exploration. Keeps steps small enough for incremental verification.
 

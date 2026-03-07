@@ -25,9 +25,9 @@ Four parallel reviewer agents insert inline comments directly into the document 
 
 ## Phase 1: Gather Context
 
-**Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix).
+**Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix: `-impl.md`, `-context.md`).
 
-**Read state** to get: `stages.intake.ticket_file` and `stages.spec.context_file`.
+**Locate state**: `.claude/swe-state/{ticket-id}.json`. Read state to get: `stages.intake.ticket_file` and `stages.spec.context_file`.
 
 **Read**: document under review (required), ticket.json (if available), context doc (if available).
 
@@ -47,6 +47,8 @@ prompt: |
   - Codebase context: {context_file path from state}
 
   Review mode: {spec|impl}
+  The document may contain comments from prior review iterations
+  (OPEN or RESOLVED). Follow your re-review instructions for those.
   Read the document and supporting files, then insert your review comments
   as inline blockquotes using your standard comment format.
 ```

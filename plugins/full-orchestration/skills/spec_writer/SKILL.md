@@ -84,18 +84,24 @@ WHILE iteration < 5:
 
     1. Run /spec_review {spec_file path from state}
        → Returns OPEN comment count by severity
+       On failure: retry once. If second failure, break loop and
+       proceed to user gate with warning that review could not complete.
 
     2. IF 0 OPEN comments → CONVERGED → break
 
     3. Spawn author agent to address comments:
        subagent_type: full-orchestration:SpecArchitect
        prompt: |
-         Review comments have been added to: {spec_file}
+         State file: .claude/swe-state/{ticket-id}.json
+         Read state to locate: spec_file, context_file, and
+         stages.intake.ticket_file.
 
-         Read the document. For each comment marked OPEN:
+         Review comments have been added to the spec. For each
+         comment marked OPEN:
          1. Understand the reviewer's concern
-         2. Modify the relevant section to address it
-         3. Change the comment status from OPEN to RESOLVED
+         2. Reference the ticket and codebase context as needed
+         3. Modify the relevant section to address it
+         4. Change the comment status from OPEN to RESOLVED
 
          Do NOT delete comments. Do NOT add new content beyond
          addressing the comments. Do NOT change sections with no comments.
@@ -114,16 +120,19 @@ IF iteration == 5 AND OPEN comments remain:
 
 After loop exits (converged or capped):
 1. Read the spec file
-2. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**`
-3. Write the cleaned file back
+2. If capped with OPEN comments: extract all `> **[...|OPEN]**` lines and save as a list for the user gate
+3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
+4. Write the cleaned file back
 
 Update state: `stages.spec.spec_review_iterations = {iteration count}`
 
 ### User Gate
 
-Present the clean spec to the user. If OPEN comments remained at cap, show them separately.
+Present the clean spec to the user. If OPEN comments remained at cap, show the extracted list separately.
 
-User chooses: **Approve** → proceed to 2D. **Request changes** → user provides direction, re-enter loop.
+User chooses:
+- **Approve** → proceed to 2D
+- **Request changes** → user provides direction, spawn SpecArchitect with direction (same state-referencing prompt as step 3 above, plus user direction appended), then re-enter the loop. The iteration counter does NOT reset — it continues from the current count toward the cap of 5.
 
 ---
 
@@ -152,18 +161,24 @@ WHILE iteration < 5:
 
     1. Run /spec_review {impl_plan_file path from state}
        → Returns OPEN comment count by severity
+       On failure: retry once. If second failure, break loop and
+       proceed to user gate with warning that review could not complete.
 
     2. IF 0 OPEN comments → CONVERGED → break
 
     3. Spawn author agent to address comments:
        subagent_type: full-orchestration:ImplPlanner
        prompt: |
-         Review comments have been added to: {impl_plan_file}
+         State file: .claude/swe-state/{ticket-id}.json
+         Read state to locate: impl_plan_file, spec_file,
+         context_file, and stages.intake.ticket_file.
 
-         Read the document. For each comment marked OPEN:
+         Review comments have been added to the impl plan. For each
+         comment marked OPEN:
          1. Understand the reviewer's concern
-         2. Modify the relevant section to address it
-         3. Change the comment status from OPEN to RESOLVED
+         2. Reference the spec, ticket, and codebase context as needed
+         3. Modify the relevant section to address it
+         4. Change the comment status from OPEN to RESOLVED
 
          Do NOT delete comments. Do NOT add new content beyond
          addressing the comments. Do NOT change sections with no comments.
@@ -182,16 +197,19 @@ IF iteration == 5 AND OPEN comments remain:
 
 After loop exits (converged or capped):
 1. Read the impl plan file
-2. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**`
-3. Write the cleaned file back
+2. If capped with OPEN comments: extract all `> **[...|OPEN]**` lines and save as a list for the user gate
+3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
+4. Write the cleaned file back
 
 Update state: `stages.spec.impl_review_iterations = {iteration count}`
 
 ### User Gate
 
-Present the clean impl plan to the user. If OPEN comments remained at cap, show them separately.
+Present the clean impl plan to the user. If OPEN comments remained at cap, show the extracted list separately.
 
-User chooses: **Approve** → proceed to Stage 3. **Request changes** → user provides direction, re-enter loop.
+User chooses:
+- **Approve** → proceed to Stage 3
+- **Request changes** → user provides direction, spawn ImplPlanner with direction (same state-referencing prompt as step 3 above, plus user direction appended), then re-enter the loop. The iteration counter does NOT reset — it continues from the current count toward the cap of 5.
 
 ---
 

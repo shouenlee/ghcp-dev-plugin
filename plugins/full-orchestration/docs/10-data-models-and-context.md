@@ -198,7 +198,7 @@ Parsed from description text by searching for:
 
 ## Stage 2: Spec & Design
 
-Stage 2 has 5 sub-stages (2A–2E) producing 5 artifact files. All are stored under `.claude/specs/`.
+Stage 2 has 5 sub-stages (2A–2E) producing 3 artifact files. All are stored under `.claude/specs/`.
 
 ### 2A — Codebase Context Document
 
@@ -300,7 +300,7 @@ Ambiguities needing user input, design trade-offs.
 |---|---|
 | Agent file | `agents/SpecArchitect.agent.md` |
 | Model | `opus` |
-| Tools | Read, Grep, Write |
+| Tools | Read, Grep, Edit, Write |
 | Reads | `ticket.json`, `{ticket-id}-context.md`, referenced source files |
 | Writes | `.claude/specs/{ticket-id}.md` |
 
@@ -346,7 +346,7 @@ Each reviewer operates in two modes determined by the document path:
 | `spec` | Path matches `{ticket-id}.md` | Design-level review (2C) |
 | `impl` | Path matches `{ticket-id}-impl.md` | Step-level review (2E) |
 
-Detection: ticket ID = everything before first known suffix (`-impl.md`, `-context.md`, `-review-*.md`).
+Detection: ticket ID = everything before first known suffix (`-impl.md`, `-context.md`).
 
 ### 2D — Implementation Plan
 
@@ -398,7 +398,7 @@ Revert procedure, down migrations, feature flags.
 |---|---|
 | Agent file | `agents/ImplPlanner.agent.md` |
 | Model | `opus` |
-| Tools | Read, Glob, Grep, Write |
+| Tools | Read, Glob, Grep, Edit, Write |
 | Reads | `{ticket-id}.md` (spec), `{ticket-id}-context.md`, every file it plans to reference |
 | Writes | `.claude/specs/{ticket-id}-impl.md` |
 
@@ -800,12 +800,12 @@ ticket.json ──────────────► spec_writer
 | Agent | Plugin | Model | Tools | Role |
 |---|---|---|---|---|
 | Explore (×3-5) | built-in | — | Read-only | Codebase exploration (2A) |
-| SpecArchitect | full-orchestration | opus | Read, Grep, Write | Spec authoring (2B) |
+| SpecArchitect | full-orchestration | opus | Read, Grep, Edit, Write | Spec authoring (2B) + fix comments (2C) |
 | MaintainabilityReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | SecurityReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | EfficiencyReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | CompletenessReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
-| ImplPlanner | full-orchestration | opus | Read, Glob, Grep, Write | Impl planning (2D) |
+| ImplPlanner | full-orchestration | opus | Read, Glob, Grep, Edit, Write | Impl planning (2D) + fix comments (2E) |
 | TddEngineer | full-orchestration | opus | Read, Grep, Glob, Edit, Write, Bash | Implementation (3) + review fixes (4) |
 | Advocate | deep-review | (per def) | Read-only | Code review — defense (4) |
 | Skeptic | deep-review | (per def) | Read-only | Code review — attack (4) |
