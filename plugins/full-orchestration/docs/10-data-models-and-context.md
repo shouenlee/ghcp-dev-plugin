@@ -621,32 +621,29 @@ prompt: |
 
 ### User-Directed Iterate Context Passing
 
-When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEngineer with full context AND user direction:
+When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEngineer with the state file reference and user direction:
 
 ```
 subagent_type: full-orchestration:TddEngineer
 prompt: |
+  State file: .claude/swe-state/{ticket-id}.json
   Iterating on implementation based on code review feedback.
 
-  Original inputs:
-    Spec:        {spec_file from state}
-    Plan:        {impl_plan_file from state}
-    Context:     {context_file from state}
-
-  Previous implementation:
-    Summary:     {impl_summary_file from state}
-
-  Review feedback:
-    Full review: {review_iteration_file from state}
+  Read state to locate all inputs:
+  - stages.spec.spec_file (original spec)
+  - stages.spec.impl_plan_file (original plan)
+  - stages.spec.context_file (codebase context)
+  - stages.implement.impl_summary_file (previous impl summary)
+  - stages.review.review_iteration_file (latest review feedback)
 
   User direction:
     {verbatim user instruction}
 
-  Read review and impl summary to understand what needs to change.
-  Use TDD. Keep all existing tests passing.
+  Read the review feedback and impl summary to understand what
+  needs to change. Use TDD. Keep all existing tests passing.
   Commit: "review: fix {severity} — {description}"
   Run full suite when done.
-  Write updated summary to: {impl_summary_file from state}
+  Write updated summary to the impl_summary_file path from state.
 ```
 
 After completion, `code_review` updates `last_review_commit` and returns to Phase 2B.

@@ -40,13 +40,17 @@ Spawn FOUR agents in a SINGLE message:
 ```
 subagent_type: full-orchestration:{ReviewerName}
 prompt: |
-  Review this document by inserting inline comments: {doc_path}
-
-  Supporting context:
-  - Ticket: {ticket_file path from state}
-  - Codebase context: {context_file path from state}
-
+  State file: .claude/swe-state/{ticket-id}.json
   Review mode: {spec|impl}
+
+  Read state to locate the document under review:
+  - spec mode: stages.spec.spec_file
+  - impl mode: stages.spec.impl_plan_file
+
+  Also read supporting context from state:
+  - stages.intake.ticket_file
+  - stages.spec.context_file
+
   The document may contain comments from prior review iterations
   (OPEN or RESOLVED). Follow your re-review instructions for those.
   Read the document and supporting files, then insert your review comments

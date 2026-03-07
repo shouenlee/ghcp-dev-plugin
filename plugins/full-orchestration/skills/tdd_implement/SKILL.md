@@ -36,17 +36,18 @@ Spawn the TDD engineer to execute the approved implementation plan using red/gre
 ```
 subagent_type: full-orchestration:TddEngineer
 prompt: |
-  Your inputs:
-    Technical spec:       {spec_file from state}
-    Implementation plan:  {impl_plan_file from state}
-    Codebase context:     {context_file from state}
+  State file: .claude/swe-state/{ticket-id}.json
+  Read state to locate:
+  - stages.spec.spec_file (technical spec)
+  - stages.spec.impl_plan_file (implementation plan)
+  - stages.spec.context_file (codebase context)
+  - stages.implement.impl_summary_file (write summary here when done)
 
   Execute the implementation plan using strict TDD (red/green/refactor).
   Work on the current branch. Do NOT create or switch branches.
   Commit after each passing step.
   Run the full test suite when all steps are complete.
-
-  Write the implementation summary to: {impl_summary_file from state}
+  Write the implementation summary to the impl_summary_file path from state.
 ```
 
 ---

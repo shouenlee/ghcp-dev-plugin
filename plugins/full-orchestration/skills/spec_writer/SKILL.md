@@ -64,9 +64,10 @@ Merge outputs into `.claude/specs/{ticket-id}-context.md` (path from `stages.spe
 ```
 subagent_type: full-orchestration:SpecArchitect
 prompt: |
-  Ticket: {ticket_file path from state}
-  Context: {context_file path from state}
-  Write spec to: {spec_file path from state}
+  State file: .claude/swe-state/{ticket-id}.json
+  Read state to locate: stages.intake.ticket_file, stages.spec.context_file,
+  and stages.spec.spec_file.
+  Read the ticket and context, then write the spec to the spec_file path.
 ```
 
 ---
@@ -141,9 +142,11 @@ User chooses:
 ```
 subagent_type: full-orchestration:ImplPlanner
 prompt: |
-  Spec: {spec_file path from state}
-  Context: {context_file path from state}
-  Write plan to: {impl_plan_file path from state}
+  State file: .claude/swe-state/{ticket-id}.json
+  Read state to locate: stages.spec.spec_file, stages.spec.context_file,
+  and stages.spec.impl_plan_file.
+  Read the spec and context, then write the implementation plan to
+  the impl_plan_file path.
 ```
 
 ---
