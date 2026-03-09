@@ -38,7 +38,7 @@ Select explorers based on labels:
 | API change (`api`, `endpoint`, `rest`, `graphql`) | Entity + Dependency + Integration | 3 |
 | Default | Entity + Dependency + Pattern + Test | 4 |
 
-Spawn all selected explorers as `subagent_type: Explore` in a SINGLE message. Each gets:
+Spawn all selected explorers as `subagent_type: Explore` with `model: haiku` and `max_turns: 10` in a SINGLE message. Each gets:
 
 ```
 Explore the codebase to find {topic} relevant to this ticket.
@@ -63,6 +63,7 @@ Merge outputs into `.claude/specs/{ticket-id}-context.md` (path from `stages.spe
 
 ```
 subagent_type: full-orchestration:SpecArchitect
+max_turns: 15
 prompt: |
   State file: .claude/swe-state/{ticket-id}.json
   Read state to locate: stages.intake.ticket_file, stages.spec.context_file,
@@ -92,6 +93,7 @@ WHILE iteration < 5:
 
     3. Spawn author agent to address comments:
        subagent_type: full-orchestration:SpecArchitect
+       max_turns: 15
        prompt: |
          State file: .claude/swe-state/{ticket-id}.json
          Read state to locate: spec_file, context_file, and
@@ -110,7 +112,8 @@ WHILE iteration < 5:
          When done, report: number of comments addressed, any you
          couldn't resolve (with explanation).
 
-    4. Continue loop (next iteration re-reviews)
+    4. Update state: stages.spec.spec_review_iterations = iteration
+    5. Continue loop (next iteration re-reviews)
 
 IF iteration == 5 AND OPEN comments remain:
     Report: "Spec review did not fully converge after 5 rounds.
@@ -125,15 +128,13 @@ After loop exits (converged or capped):
 3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
 4. Write the cleaned file back
 
-Update state: `stages.spec.spec_review_iterations = {iteration count}`
-
 ### User Gate
 
 Present the clean spec to the user. If OPEN comments remained at cap, show the extracted list separately.
 
 User chooses:
 - **Approve** → proceed to 2D
-- **Request changes** → user provides direction, spawn SpecArchitect with direction (same state-referencing prompt as step 3 above, plus user direction appended), then re-enter the loop. The iteration counter does NOT reset — it continues from the current count toward the cap of 5.
+- **Request changes** → user provides direction, spawn SpecArchitect with direction (same state-referencing prompt as step 3 above, plus user direction appended). Before re-entering the loop, set `iteration = min(iteration, 4)` so there is always at least 1 review pass after a user-requested revision. Then re-enter the loop.
 
 ---
 
@@ -141,6 +142,7 @@ User chooses:
 
 ```
 subagent_type: full-orchestration:ImplPlanner
+max_turns: 15
 prompt: |
   State file: .claude/swe-state/{ticket-id}.json
   Read state to locate: stages.spec.spec_file, stages.spec.context_file,
@@ -171,6 +173,7 @@ WHILE iteration < 5:
 
     3. Spawn author agent to address comments:
        subagent_type: full-orchestration:ImplPlanner
+       max_turns: 15
        prompt: |
          State file: .claude/swe-state/{ticket-id}.json
          Read state to locate: impl_plan_file, spec_file,
@@ -189,7 +192,8 @@ WHILE iteration < 5:
          When done, report: number of comments addressed, any you
          couldn't resolve (with explanation).
 
-    4. Continue loop (next iteration re-reviews)
+    4. Update state: stages.spec.impl_review_iterations = iteration
+    5. Continue loop (next iteration re-reviews)
 
 IF iteration == 5 AND OPEN comments remain:
     Report: "Impl plan review did not fully converge after 5 rounds.
@@ -204,15 +208,13 @@ After loop exits (converged or capped):
 3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
 4. Write the cleaned file back
 
-Update state: `stages.spec.impl_review_iterations = {iteration count}`
-
 ### User Gate
 
 Present the clean impl plan to the user. If OPEN comments remained at cap, show the extracted list separately.
 
 User chooses:
 - **Approve** → proceed to Stage 3
-- **Request changes** → user provides direction, spawn ImplPlanner with direction (same state-referencing prompt as step 3 above, plus user direction appended), then re-enter the loop. The iteration counter does NOT reset — it continues from the current count toward the cap of 5.
+- **Request changes** → user provides direction, spawn ImplPlanner with direction (same state-referencing prompt as step 3 above, plus user direction appended). Before re-entering the loop, set `iteration = min(iteration, 4)` so there is always at least 1 review pass after a user-requested revision. Then re-enter the loop.
 
 ---
 

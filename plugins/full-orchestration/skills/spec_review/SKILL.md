@@ -1,18 +1,18 @@
 ---
 name: spec_review
 description: >-
-  Run a four-agent inline comment review on a technical spec or
-  implementation plan. Use when a spec or plan needs evaluation from
-  maintainability, security, efficiency, and completeness perspectives.
-  Spawns four reviewer agents that insert OPEN blockquote comments
-  directly into the document.
+  Run a four-agent review on a technical spec or implementation plan.
+  Use when a spec or plan needs evaluation from maintainability,
+  security, efficiency, and completeness perspectives. Spawns four
+  reviewer agents that write structured comment files, then merges
+  all comments into the document in a single conflict-free pass.
 ---
 
 # Spec Review
 
 **State file**: `.claude/swe-state/{ticket-id}.json`
 
-Four parallel reviewer agents insert inline comments directly into the document under review.
+Four parallel reviewer agents each write a structured comment file. A single merge pass then inserts all comments into the document, avoiding parallel edit conflicts.
 
 ## Usage
 
@@ -33,15 +33,23 @@ Four parallel reviewer agents insert inline comments directly into the document 
 
 ---
 
-## Phase 2: Parallel Inline Review
+## Phase 2: Parallel Review
 
-Spawn FOUR agents in a SINGLE message:
+Delete any existing comment files from prior invocations before starting:
+
+```bash
+rm -f .claude/swe-state/{ticket-id}/comments-*.json
+```
+
+Spawn FOUR agents in a SINGLE message. Each writes to its own comment file — no direct document edits.
 
 ```
 subagent_type: full-orchestration:{ReviewerName}
+max_turns: 10
 prompt: |
   State file: .claude/swe-state/{ticket-id}.json
   Review mode: {spec|impl}
+  Comment file: .claude/swe-state/{ticket-id}/comments-{ReviewerName}.json
 
   Read state to locate the document under review:
   - spec mode: stages.spec.spec_file
@@ -53,8 +61,8 @@ prompt: |
 
   The document may contain comments from prior review iterations
   (OPEN or RESOLVED). Follow your re-review instructions for those.
-  Read the document and supporting files, then insert your review comments
-  as inline blockquotes using your standard comment format.
+  Read the document and supporting files, then write your review
+  comments to the comment file path above.
 ```
 
 Agents: `MaintainabilityReviewer`, `SecurityReviewer`, `EfficiencyReviewer`, `CompletenessReviewer`.
@@ -63,9 +71,28 @@ On agent failure: log warning, proceed with remaining agents.
 
 ---
 
-## Phase 3: Count and Report
+## Phase 3: Merge Comments
 
-After all agents complete, read the document and count blockquote comments matching:
+After all agents complete, merge their comment files into the document in a single pass. This avoids parallel edit conflicts.
+
+1. Read all 4 comment files. Skip any that don't exist (agent may have failed or found no issues).
+2. Read the document under review.
+3. Process each entry across all files:
+
+| Action | Operation |
+|---|---|
+| `add` | Find the line containing the `anchor` text. Insert `> **[{SEVERITY} \| {ReviewerName} \| OPEN]** {comment}` after the end of that paragraph (next blank line or heading). If anchor not found, append comment at the end of the document with a note. |
+| `reopen` | Find the blockquote line matching `anchor`. Change `RESOLVED` to `OPEN`. If `comment` field is present, replace the comment text. |
+| `remove` | Find and delete the blockquote line matching `anchor`. |
+
+4. Write the updated document back.
+5. Delete all 4 comment files (cleanup).
+
+---
+
+## Phase 4: Count and Report
+
+Read the document and count blockquote comments matching:
 
 ```
 > **[{SEVERITY} | {Reviewer} | OPEN]**

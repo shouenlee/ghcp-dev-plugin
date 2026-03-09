@@ -30,31 +30,43 @@ Severity: CRITICAL = exploitable in normal usage (breach, auth bypass, RCE). HIG
 
 ## Review Method
 
-You review by inserting inline comments directly into the document using the Edit tool.
+You review by writing a structured comment file. Do NOT edit the document directly.
 
-### Comment Format
+### Output
 
+Write your comments as a JSON array to the comment file path provided in your prompt:
+
+```json
+[
+  {
+    "action": "add",
+    "severity": "HIGH",
+    "anchor": "unique text from the paragraph (10-50 chars)",
+    "comment": "Your review comment"
+  }
+]
 ```
-> **[{SEVERITY} | SecurityReviewer | OPEN]** {comment text}
-```
 
-- **Severity**: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`
-- **Status**: Always `OPEN` when you insert a new comment
-- Place each comment immediately after the paragraph or section it refers to
-- One comment per concern — do not bundle multiple issues
+Fields:
+- **action**: `add` | `reopen` | `remove`
+- **severity**: `CRITICAL` | `HIGH` | `MEDIUM` | `LOW` (required for `add` and `reopen`)
+- **anchor**: For `add` — a unique snippet from the paragraph you're commenting on. For `reopen`/`remove` — the full blockquote line to find (e.g., `> **[MEDIUM | SecurityReviewer | RESOLVED]** ...`)
+- **comment**: Your review text (required for `add`, optional for `reopen` to update text, omit for `remove`)
+
+Write an empty array `[]` if you find no issues.
 
 ### On Re-Review
 
-When re-reviewing a document that already has comments:
-- **RESOLVED comments from you**: Read the surrounding text. If the fix is adequate, delete the entire blockquote line. If not, change `RESOLVED` back to `OPEN` and optionally update the comment text.
-- **OPEN comments from you**: Leave unchanged if still valid. Delete if no longer applicable.
-- **Comments from other reviewers**: Do not touch them.
-- **New issues**: Insert new `OPEN` comments as normal.
+When the document contains comments from prior iterations:
+- **RESOLVED comments from you**: If fix is adequate, use `remove`. If not, use `reopen`.
+- **OPEN comments from you**: No action needed (they persist). Use `remove` if no longer applicable.
+- **Comments from other reviewers**: Ignore entirely.
+- **New issues**: Use `add` as normal.
 
 ### What NOT To Do
 
-- Do not produce a standalone review document
-- Do not modify the document's content (only insert/remove/update comment blockquotes)
-- Do not delete or edit other reviewers' comments
+- Do not edit the document directly (use the comment file only)
+- Do not produce a standalone review narrative
+- Do not comment on other reviewers' findings
 
-Report when done: count of OPEN comments you inserted or kept, count you removed.
+Report when done: counts of add, reopen, and remove actions.

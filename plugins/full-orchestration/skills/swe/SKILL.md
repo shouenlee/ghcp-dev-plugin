@@ -18,7 +18,6 @@ You give it a ticket ID. It gives you a reviewed PR.
 ```
 /swe PROJ-123
 /swe https://github.com/org/repo/issues/42
-/swe PROJ-123 --from=implement
 ```
 
 ---
@@ -30,13 +29,13 @@ Parse the first positional argument:
 - Bare ID (`PROJ-123`, `#42`) → use directly
 - No argument → show usage and exit
 
-Optional flag: `--from=STAGE` resumes from a specific stage. Valid values: `intake`, `spec`, `implement`, `review`, `pr`.
-
 ---
 
 ## Phase 2: Initialize State
 
-### Fresh Run (no `--from` flag)
+**Step 0 — Check plugin dependencies:**
+
+Verify `/deep_review` is available (required for Stage 3). If unavailable, stop and show: `/plugin install deep-review@ghcp-dev-plugin`.
 
 **Step 1 — Detect target branch:**
 
@@ -96,14 +95,13 @@ mkdir -p .claude/specs
     "review": {
       "completed": false,
       "approved": false,
-      "last_review_commit": null,
       "iterations": 0,
-      "phase": null,
+      "phase": "pending",
       "review_iteration_file": ".claude/swe-state/{ticket-id}/review-iteration.md",
       "review_summary_file": ".claude/swe-state/{ticket-id}/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
-        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "deferred": 0, "dismissed": 0 },
+        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "dismissed": 0 },
         "minor": { "total": 0, "fixed": 0, "auto_fixed": 0 },
         "suggestions": 0,
         "dismissed": []
@@ -122,20 +120,15 @@ mkdir -p .claude/specs
 }
 ```
 
-This is the **single source of truth** for the pipeline. All file paths are pre-populated — downstream skills read paths from state, never construct them. Fields with `null`, `false`, `0`, or `[]` are populated by the owning stage. Every stage gates on `stages.{name}.completed` before reading that stage's fields.
-
-### Resume (`--from` flag)
-
-1. Load state from `.claude/swe-state/{ticket-id}.json`. If missing, error and suggest a fresh run.
-2. Validate all stages before `--from` show `completed: true`. If not, report which are incomplete.
+This is the **single source of truth** for the pipeline. All file paths are pre-populated — downstream skills read paths from state, never construct them. Fields with `null`, `false`, `0`, or `[]` are populated by the owning stage.
 
 ---
 
 ## Phase 3: Stage Dispatch Loop
 
-Pipeline runs 5 stages in order: `intake → spec → implement → review → pr`
+Pipeline runs 4 stages in order: `intake → spec → implement_and_review → pr`
 
-For each stage starting from the determined start:
+For each stage in order:
 
 1. Display `## Stage {N}: {Name}`
 2. Set `current_stage` and `status: "in_progress"` in state
@@ -145,17 +138,14 @@ For each stage starting from the determined start:
 |---|---|
 | `intake` | `/ticket_intake {ticket-id}` |
 | `spec` | `/spec_writer {ticket-id}` |
-| `implement` | `/tdd_implement {ticket-id}` |
-| `review` | `/code_review {ticket-id}` |
+| `implement_and_review` | `/implement_and_review {ticket-id}` |
 | `pr` | `/pr_create {ticket-id}` |
 
-4. **Success** → mark `stages.{name}.completed = true`, proceed
-5. **Failure** → set `status: "failed"`, suggest `/swe {ticket-id} --from={stage}`
-6. **User abort** → set `status: "aborted"`, save and exit
+4. **Success** → proceed
+5. **Failure** → set `status: "failed"`, report which stage failed
+6. **User abort** → set `status: "aborted"`, exit
 
-Each skill handles its own user interaction. The orchestrator does not add gates.
-
-The `code_review` skill manages the review ↔ implement iterate loop internally. The orchestrator waits for it to return `approved` or `aborted`.
+Each skill handles its own user interaction and state writes.
 
 ---
 
@@ -170,3 +160,5 @@ The `code_review` skill manages the review ↔ implement iterate loop internally
 ```
 
 Set `status: "completed"`.
+
+> **Tip:** Use `/swe-status {ticket-id}` at any time to check pipeline progress.
