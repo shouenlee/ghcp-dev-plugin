@@ -38,7 +38,7 @@ Select explorers based on labels:
 | API change (`api`, `endpoint`, `rest`, `graphql`) | Entity + Dependency + Integration | 3 |
 | Default | Entity + Dependency + Pattern + Test | 4 |
 
-Spawn all selected explorers as `subagent_type: Explore` with `model: haiku` and `max_turns: 10` in a SINGLE message. Each gets:
+Spawn all selected explorers as `subagent_type: Explore` with `max_turns: 10` in a SINGLE message. Each gets:
 
 ```
 Explore the codebase to find {topic} relevant to this ticket.

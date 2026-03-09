@@ -14,8 +14,8 @@ Quick view of where a ticket is in the `/swe` pipeline.
 ## Usage
 
 ```
-/swe-status PROJ-123       # Status for a specific ticket
-/swe-status                # List all active pipelines
+/swe_status PROJ-123       # Status for a specific ticket
+/swe_status                # List all active pipelines
 ```
 
 ---

@@ -105,4 +105,4 @@ Each skill handles its own user interaction and state writes.
 
 Set `status: "completed"`.
 
-> **Tip:** Use `/swe-status {ticket-id}` at any time to check pipeline progress.
+> **Tip:** Use `/swe_status {ticket-id}` at any time to check pipeline progress.
