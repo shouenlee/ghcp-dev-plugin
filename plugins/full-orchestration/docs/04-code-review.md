@@ -1,22 +1,12 @@
-# 04 — Code Review
+# 04 — Code Review (within Implement & Review)
 
 ## Purpose
 
-Stage 4 subjects the implementation from [Stage 3](03-tdd-implementation.md) to adversarial, multi-perspective code review. Multiple review agents examine the diff independently, surface issues from different angles, and produce a consolidated assessment. The orchestrator then drives an iteration loop — auto-fixing minor issues, escalating major ones, and re-reviewing until the changes are approved or the user intervenes.
+The review phase subjects the implementation to adversarial, multi-perspective code review. Multiple review agents examine the full branch diff independently, surface issues from different angles, and produce a consolidated assessment. The `implement_and_review` skill then drives a fix loop — auto-fixing Minor and Major findings with full state context, escalating Critical ones to the user, and re-reviewing until convergence or cap.
+
+This phase is the second half of the `implement_and_review` skill (Stage 3). It begins after the TDD implementation phase completes (see [03 — TDD Implementation](03-tdd-implementation.md)).
 
 The goal: catch bugs, security holes, and architectural missteps **before** they reach a human reviewer in the PR.
-
----
-
-## Options
-
-| Option | Approach | Pros | Cons | Recommendation |
-|--------|----------|------|------|----------------|
-| **A** | Reuse `deep-review` plugin | Battle-tested agents; consistent with standalone usage; zero additional skill authoring | Less control over review criteria | **Recommended** |
-| **B** | Custom review team | Full control over prompts and review focus areas | Duplicates existing work; maintenance burden | Use only if review needs diverge significantly |
-| **C** | Sequential reviews | One reviewer at a time; lower cost per run | Slower wall-clock time; reviewers cannot cross-reference each other | Use for budget-constrained runs |
-
-Option A is the default. The orchestrator delegates to the [`deep-review`](../../deep-review/skills/deep_review/SKILL.md) plugin, which already implements parallel three-agent review with synthesis.
 
 ---
 
@@ -36,75 +26,65 @@ For full details on how context is gathered, agents are spawned, and synthesis w
 
 ---
 
-## Review Loop: Three-Phase Architecture
+## Review-Fix Loop
+
+The review-fix loop follows the same author→reviewer→fix structure as the 2B↔2C spec review-fix loop: an author (TddEngineer) produces work, a reviewer (deep-review) evaluates it, the author fixes, and the reviewer re-evaluates — repeating until convergence or cap. The key difference is convergence criteria: spec review converges on 0 OPEN comments (all comments block), while code review converges on 0 Critical + 0 Major + 0 Minor (Suggestions are non-blocking).
+
+Every review iteration is a **full-branch review** (`target_branch...feature_branch`). No incremental snapshots are needed — this matches how `spec_review` re-reads the full document each iteration.
 
 ```
 ┌──────────────────────────────────────┐
-│  Phase A: Initial Full Review         │
-│  git diff {target}...{feature}       │
-│  /deep_review (full branch diff)     │
-└──────────────┬───────────────────────┘
-               │
-        ┌──────┴──────┐
-        │             │
-   No findings    Findings
-        │             │
-        │      ┌──────┴──────────┐
-        │      │ Critical?       │
-        │      │ YES → ask user  │
-        │      │ NO  → auto-fix  │
-        │      └──────┬──────────┘
-        │             │
-        │      ┌──────┴──────────┐
-        │      │ TddEngineer     │
-        │      │ applies fixes   │
-        │      │ records snapshot│
-        │      └──────┬──────────┘
-        │             │
-        ▼             ▼
-┌──────────────────────────────────────┐
-│  Phase B: Incremental Fix Loop       │◄────────────┐
-│  git diff {snapshot}...HEAD          │             │
-│  /deep_review (fix changes only)     │             │
-└──────────────┬───────────────────────┘             │
-               │                                     │
-        ┌──────┴──────┐                              │
-        │             │                              │
-   Converged     Findings                            │
-   (0 C/M/Mi)        │                              │
-        │      ┌──────┴──────────┐                   │
-        │      │ Critical → user │                   │
-        │      │ Major → auto-fix│                   │
-        │      │ Minor → auto-fix│                   │
-        │      └──────┬──────────┘                   │
-        │             │                              │
-        │      TddEngineer fixes                     │
-        │             │                              │
-        │      iteration < 5? ─── Yes ───────────────┘
+│  Review-Fix Loop (max 5 rounds)      │
+│                                      │
+│  /deep_review --base={target}        │◄──────────┐
+│               --head={feature}       │           │
+│                                      │           │
+│  Parse structured-findings           │           │
+│  Map priorities → severity           │           │
+│  Write to review_iteration_file      │           │
+└──────────────┬───────────────────────┘           │
+               │                                    │
+        ┌──────┴──────┐                             │
+        │             │                             │
+   Converged     Findings                           │
+   (0 C/M/Mi)        │                             │
+        │      ┌──────┴──────────┐                  │
+        │      │ Critical → user │                  │
+        │      │ Major → auto-fix│                  │
+        │      │ Minor → auto-fix│                  │
+        │      └──────┬──────────┘                  │
+        │             │                             │
+        │      TddEngineer fixes                    │
+        │      (with full state context:            │
+        │       spec, plan, context,                │
+        │       impl summary, review)               │
+        │             │                             │
+        │      iteration < 5? ─── Yes ──────────────┘
         │             │
         │          No (capped)
         │             │
         ▼             ▼
-┌──────────────────────────────────────┐
-│  Phase C: Final Validation Review     │
-│  git diff {target}...{feature}       │
-│  /deep_review (full branch diff)     │
-│  Compare vs Phase A findings          │
-└──────────────┬───────────────────────┘
-               │
-               ▼
 ┌──────────────────────────────────────┐
 │  Approval Gate (always)               │
 │  User: approve / iterate / abort     │
 └──────────────────────────────────────┘
 ```
 
-### Phase details
+### How It Works
 
-1. **Phase A — Initial full review**: The orchestrator runs `/deep_review` against the complete branch diff. Critical findings pause for user input. Major and Minor findings are auto-fixed by the TDD engineer. A git snapshot is recorded after fixes.
-2. **Phase B — Incremental fix loop**: Subsequent iterations review only the diff since the last snapshot (fix changes only). The loop converges when a re-review returns 0 Critical + 0 Major + 0 Minor findings. Max 5 total iterations (including Phase A). If capped without convergence, proceeds to Phase C with a warning.
-3. **Phase C — Final validation**: One last full-branch review catches interaction bugs that incremental reviews missed. Findings are compared to Phase A to identify regressions vs persistent issues. Does not re-enter the auto-fix loop — any remaining Critical/Major are presented at the approval gate.
-4. **Approval gate**: Always reached. User sees iteration count, findings breakdown (resolved, auto-fixed, dismissed, remaining), and test status. User chooses approve, iterate (back to Phase B with direction), or abort.
+1. **Full branch review**: `implement_and_review` runs `/deep_review --base={target_branch} --head={feature_branch}` to review the complete diff. On failure, retry once; second failure breaks the loop with a warning.
+
+2. **Parse and classify**: Structured findings are extracted from the `<!-- structured-findings -->` block. Priorities are mapped: Critical→Critical, High→Major, Medium→Minor, Low→Suggestion. Results are written to `review_iteration_file`.
+
+3. **Convergence check**: If 0 Critical + 0 Major + 0 Minor → converged, exit loop.
+
+4. **Handle by severity**:
+   - **Critical**: Pause the loop. Present to user with options per-Critical: fix (with direction), dismiss (with rationale), or abort.
+   - **Major + Minor**: Queue for auto-fix.
+
+5. **Auto-fix with full context**: TddEngineer is spawned with a state file reference, giving it access to the original spec, implementation plan, codebase context, impl summary, and review feedback — not just the scoped finding list. This ensures fixes are informed by the full design context.
+
+6. **Loop**: Continue until converged or iteration cap (5 rounds).
 
 ---
 
@@ -121,49 +101,33 @@ All findings are classified into one of four severity levels:
 
 ### How severities drive the loop
 
-- **Critical** findings break the auto-loop. The orchestrator pauses immediately and presents Critical findings for user decision: fix (with direction), dismiss (with rationale), or abort. Dismissed Criticals are recorded in state.
-- **Major** findings are auto-fixed by the TDD engineer. No user input required — the re-review in subsequent iterations validates the fix.
+- **Critical** findings break the auto-loop. The skill pauses immediately and presents Critical findings for user decision: fix (with direction), dismiss (with rationale), or abort. Dismissed Criticals are recorded in state.
+- **Major** findings are auto-fixed by TddEngineer with full state context. No user input required — the re-review in subsequent iterations validates the fix.
 - **Minor** findings are auto-fixed. If auto-fix fails, they are demoted to suggestions.
 - **Suggestions** are collected into a "Follow-up Items" section and do not block convergence.
 
 ---
 
-## Security Reviewer (Recommended Addition)
-
-> **Note:** The `full-orchestration` plugin already includes a `SecurityReviewer` agent used during spec and plan review (Stage 2). This section recommends adding a security-focused reviewer to the `deep-review` plugin for *code-level* review in Stage 4.
-
-For security-sensitive changes, consider adding a fourth reviewer focused on security. This agent would check for:
-
-- **OWASP Top 10** — injection, broken authentication, sensitive data exposure, XXE, broken access control, security misconfiguration, XSS, insecure deserialization, vulnerable components, insufficient logging
-- **Injection risks** — SQL injection, command injection, path traversal, template injection
-- **Secrets exposure** — hardcoded credentials, API keys in source, secrets in logs or error messages
-- **Dependency vulnerabilities** — known CVEs in dependencies, outdated packages with security patches
-- **Authentication and authorization** — missing auth checks, privilege escalation paths, insecure token handling
-
-This can be implemented as an additional agent in the `deep-review` plugin or as a standalone review step that runs before the main review cycle. When adding a security agent, it should have veto power: any security finding rated Critical automatically blocks the review.
-
----
-
 ## Approval Gate
 
-After the three-phase review completes, the orchestrator **always** presents a summary and waits for explicit user approval before proceeding to [Stage 5: PR Creation](05-pr-creation.md).
+After the review-fix loop completes (converged or capped), `implement_and_review` **always** presents a summary and waits for explicit user approval before proceeding to [Stage 4: PR Creation](05-pr-creation.md).
 
 The approval prompt includes:
-- Iterations completed and phase reached (converged / capped / validation findings)
+- Iterations completed and phase reached (converged / capped)
 - Findings breakdown: resolved, auto-fixed, remaining, dismissed (with rationale)
-- Follow-up items (suggestions collected across all phases)
+- Follow-up items (suggestions collected across all iterations)
 - Confirmation that all tests still pass after review fixes
 
 User chooses:
-- **Approve** — proceed to Stage 5
-- **Iterate** — spawn TDD engineer with full context + user direction, return to Phase B
+- **Approve** — proceed to Stage 4
+- **Iterate** — spawn TddEngineer with full context + user direction, return to review-fix loop (counter continues, does not reset)
 - **Abort** — stop pipeline
 
 ---
 
 ## Cross-References
 
-- [deep-review plugin](../../deep-review/skills/deep_review/SKILL.md) — the review engine used in this stage
-- [Stage 3: TDD Implementation](03-tdd-implementation.md) — produces the diff that gets reviewed; TDD engineer handles review fixes
-- [Stage 5: PR Creation](05-pr-creation.md) — consumes the approved review output
+- [deep-review plugin](../../deep-review/skills/deep_review/SKILL.md) — the review engine used in this phase
+- [03 — TDD Implementation](03-tdd-implementation.md) — the implementation phase that precedes this; TddEngineer handles both initial implementation and review fixes
+- [05 — PR Creation](05-pr-creation.md) — consumes the approved review output
 - [00 — System Overview](00-overview.md) — full pipeline architecture

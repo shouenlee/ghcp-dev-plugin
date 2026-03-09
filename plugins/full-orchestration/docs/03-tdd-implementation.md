@@ -1,37 +1,26 @@
-# Stage 3: TDD Implementation
+# 03 — TDD Implementation (within Implement & Review)
 
 ## Purpose
 
-Stage 3 takes the approved technical spec and implementation doc from Stage 2 and implements the changes following strict test-driven development. A `TddEngineer` agent works on a dedicated feature branch, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
+The implementation phase takes the approved technical spec and implementation plan from Stage 2 and implements the changes following strict test-driven development. A `TddEngineer` agent works on the current feature branch, writing failing tests first, then implementing the minimal code to pass them, and finally refactoring while keeping all tests green.
 
-This stage is mechanical by design. All design decisions were made in Stage 2. The implementation doc provides exact file paths, function signatures, test cases with inputs/outputs, and a step-by-step order. The TDD agent executes this plan without improvising.
+This phase is the first half of the `implement_and_review` skill (Stage 3). All design decisions were made in Stage 2. The implementation plan provides exact file paths, function signatures, test cases with inputs/outputs, and a step-by-step order. The TDD agent executes this plan without improvising.
+
+After implementation completes, the review-fix loop begins (see [04 — Code Review](04-code-review.md)).
 
 ## Input
 
 - Approved technical spec: `.claude/specs/{ticket-id}.md`
-- Approved implementation doc: `.claude/specs/{ticket-id}-impl.md`
+- Approved implementation plan: `.claude/specs/{ticket-id}-impl.md`
 - Codebase context: `.claude/specs/{ticket-id}-context.md`
+
+All paths are read from the state file — the TddEngineer never constructs paths directly.
 
 ## Output
 
 - All changes committed on the current branch
 - All new and existing tests passing
-- Implementation summary for Stage 4 (code review)
-
----
-
-## Options Comparison
-
-| Criteria | A: Single `TddEngineer` agent | B: Team (test-writer + implementer) | C: Iterative loop (one test at a time) |
-|---|---|---|---|
-| **Implementation effort** | Low — one agent, one skill | Medium — coordination between two agents | Medium — loop orchestration |
-| **Context coherence** | High — single agent sees full picture | Lower — handoff between agents loses context | Medium — narrow focus per iteration |
-| **Speed** | Fast — no inter-agent communication | Slower — synchronization overhead | Slowest — serial execution |
-| **TDD discipline** | Good — agent follows red/green/refactor | Best — enforced separation of concerns | Best — one test at a time |
-| **Error recovery** | Simple — single agent retries | Complex — which agent owns the fix? | Simple — retry current iteration |
-| **Recommendation** | **RECOMMENDED** | Over-engineered | Too slow for most tasks |
-
-**Decision:** Option A — a single `TddEngineer` agent that follows the red/green/refactor cycle. The implementation doc from Stage 2 already provides the test plan, so splitting test-writing from implementation adds coordination cost without meaningful quality gain.
+- Implementation summary written to `stages.implement.impl_summary_file` path from state
 
 ---
 
@@ -39,12 +28,12 @@ This stage is mechanical by design. All design decisions were made in Stage 2. T
 
 ### Overview
 
-The `TddEngineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation doc and executes the implementation plan step by step using TDD on the current branch.
+The `TddEngineer` agent is responsible for the full implementation cycle. It reads the approved spec and implementation plan and executes the implementation plan step by step using TDD on the current branch. The same agent is also used during the review-fix loop to apply fixes with full state context.
 
 ### Workflow
 
 ```
-Read approved spec + implementation doc
+Read approved spec + implementation plan (via state file)
     │
     ▼
 Confirm current branch
@@ -75,8 +64,8 @@ Produce implementation summary
 
 For each step in the implementation plan, the agent:
 
-1. Reads the test cases from the implementation doc (Section 5: Test Plan)
-2. Writes test files at the paths specified in the implementation doc
+1. Reads the test cases from the implementation plan (Section 5: Test Plan)
+2. Writes test files at the paths specified in the implementation plan
 3. Uses existing test fixtures, mocks, and patterns identified by the Test Explorer in Stage 2A
 4. Runs the tests to confirm they fail for the expected reason (not due to syntax errors or import issues)
 5. If tests fail for unexpected reasons, diagnoses and fixes the test before proceeding
@@ -86,7 +75,7 @@ For each step in the implementation plan, the agent:
 The agent:
 
 1. Implements the minimal code needed to make the failing tests pass
-2. Follows the function signatures and type definitions from the implementation doc (Sections 2-3)
+2. Follows the function signatures and type definitions from the implementation plan (Sections 2-3)
 3. Does not add functionality beyond what the tests require
 4. Runs the tests to confirm they pass
 5. If tests still fail, iterates on the implementation (not the tests)
@@ -122,10 +111,10 @@ After all steps are complete, the agent produces a summary:
 - Coverage: X% (if available)
 
 ## Deviations from Plan
-- Any differences from the implementation doc, with rationale
+- Any differences from the implementation plan, with rationale
 
 ## Notes for Review
-- Areas that need extra scrutiny in Stage 4
+- Areas that need extra scrutiny
 - Trade-offs made during implementation
 ```
 
@@ -140,7 +129,7 @@ The user should create a feature branch and invoke `/swe` from it with a clean w
 1. The user creates a feature branch before invoking `/swe`
 2. The agent works on the current branch — it does not create or switch branches
 3. All file edits, test runs, and commits happen on the current branch
-4. After implementation completes, the branch is available for Stage 4 review
+4. After implementation completes, the review-fix loop begins within the same `implement_and_review` skill
 
 ---
 
@@ -169,27 +158,6 @@ The agent detects the runner by checking for config files in priority order. If 
 
 ---
 
-## Hook Suggestion
-
-To maintain TDD discipline and catch regressions immediately, the plugin suggests an `after_edit` hook that runs relevant tests after every file modification:
-
-```json
-{
-  "hooks": [
-    {
-      "event": "after_edit",
-      "pattern": "\\.(py|js|ts|go|rs|java|rb)$",
-      "action": "suggest",
-      "message": "Source file modified. Run tests to verify your changes."
-    }
-  ]
-}
-```
-
-This hook fires after edits to source files (not test files) and suggests running the detected test command. It uses `"action": "suggest"` rather than `"action": "run"` to keep the user in control.
-
----
-
 ## Error Handling
 
 ### Test Failures
@@ -207,7 +175,7 @@ If the project uses a compiled language, compilation errors during the green pha
 
 ### Dependency Issues
 
-If new dependencies are needed (identified in the implementation doc):
+If new dependencies are needed (identified in the implementation plan):
 
 1. Install the dependency using the project's package manager
 2. Commit the dependency change separately: `chore: add {package} dependency`
@@ -230,7 +198,7 @@ Each TDD step has a maximum of 5 implementation attempts. If the agent cannot ma
 
 ## Cross-References
 
-- **Stage 2 (Spec & Design):** Provides the technical spec, implementation doc, and test plan that this stage executes. See [02-spec-design.md](02-spec-design.md).
-- **Stage 4 (Code Review):** Reviews the implementation produced by this stage using adversarial multi-perspective review. See [04-code-review.md](04-code-review.md).
+- **Stage 2 (Spec & Design):** Provides the technical spec, implementation plan, and test plan that this phase executes. See [02-spec-design.md](02-spec-design.md).
+- **Code Review (within Stage 3):** Reviews the implementation produced by this phase using adversarial multi-perspective review. See [04-code-review.md](04-code-review.md).
 - **Stage 1 (Ticket Intake):** The ticket ID used for branch naming and spec file paths originates here. See [01-ticket-intake.md](01-ticket-intake.md).
-- **Stage 5 (PR Creation):** Creates the pull request from the feature branch produced by this stage. See [05-pr-creation.md](05-pr-creation.md).
+- **Stage 4 (PR Creation):** Creates the pull request from the feature branch produced by Stage 3. See [05-pr-creation.md](05-pr-creation.md).

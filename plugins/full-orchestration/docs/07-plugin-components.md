@@ -17,10 +17,8 @@ plugins/full-orchestration/
 │   │   └── SKILL.md                         # Stage 2: spec orchestration
 │   ├── spec_review/
 │   │   └── SKILL.md                         # Stage 2C/2E: review team
-│   ├── tdd_implement/
-│   │   └── SKILL.md                         # Stage 3: TDD implementation
-│   ├── code_review/
-│   │   └── SKILL.md                         # Stage 4: code review
+│   ├── implement_and_review/
+│   │   └── SKILL.md                         # Stage 3: TDD + review loop
 │   └── pr_create/
 │       └── SKILL.md                         # Stage 5: PR creation
 ├── agents/
@@ -102,7 +100,7 @@ description: >-
 ---
 ```
 
-**Body contains:** The full orchestration logic — argument parsing (`--from=STAGE`), state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill/agent, approval gate prompts between stages, error handling and resumption instructions.
+**Body contains:** The full orchestration logic — argument parsing, state file management (`.claude/swe-state/{ticket-id}.json`), sequential invocation of each stage skill, and error handling.
 
 ### ticket_intake/SKILL.md
 
@@ -158,39 +156,23 @@ description: >-
 
 **Body contains:** Instructions for spawning four reviewer agents in parallel, each using Edit to insert inline blockquote comments (`> **[SEVERITY | Reviewer | OPEN]**`) directly into the document under review. Counts OPEN comments by severity and reports to the caller. No separate review document is produced.
 
-### tdd_implement/SKILL.md
+### implement_and_review/SKILL.md
 
-Location: `plugins/full-orchestration/skills/tdd_implement/SKILL.md`
-
-```yaml
----
-name: tdd_implement
-description: >-
-  Implement a ticket using test-driven development. Use when you
-  have an approved spec and implementation plan and are ready to
-  write code. Spawns a TDD engineer agent on a feature branch.
----
-```
-
-**Body contains:** Instructions for validating prerequisite files (spec, implementation plan, codebase context), spawning the TDD engineer agent to execute the implementation plan using strict red/green/refactor methodology on a feature branch, reporting results (branch, test counts, coverage, deviations), and updating pipeline state. Handles agent failure, missing summaries, and WIP commits.
-
-### code_review/SKILL.md
-
-Location: `plugins/full-orchestration/skills/code_review/SKILL.md`
+Location: `plugins/full-orchestration/skills/implement_and_review/SKILL.md`
 
 ```yaml
 ---
-name: code_review
+name: implement_and_review
 description: >-
-  Run adversarial code review with auto-converging fix loop. Use when you
-  have a completed implementation branch ready for review before PR
-  creation. Delegates to deep-review for three-agent analysis, auto-fixes
-  Minor and Major findings, pauses only on Critical, and runs a final
-  validation review before gating user approval.
+  Implement a ticket using TDD and review in a converging loop. Use
+  when you have an approved spec and implementation plan. Spawns
+  TddEngineer for implementation, delegates to deep-review for
+  adversarial analysis, and auto-fixes findings in an autonomous
+  loop (max 5 rounds) before gating user approval.
 ---
 ```
 
-**Body contains:** Instructions for validating that Stage 3 is complete, running a three-phase auto-converging review loop: Phase 2A (full branch diff review), Phase 2B (incremental fix loop on changes only, up to 5 iterations), Phase 2C (final full-branch validation). Auto-fixes Minor and Major findings via TddEngineer, pauses only on Critical for user decision, and gates approval before Stage 5.
+**Body contains:** Instructions for validating prerequisite files (spec, implementation plan, codebase context), spawning TddEngineer for initial TDD implementation, then entering a review-fix loop: `/deep_review` analyzes the full branch diff, findings are parsed and classified by severity, and TddEngineer auto-fixes Major and Minor findings with full state context (spec, plan, codebase context, impl summary, review feedback). The loop repeats until convergence (0 Critical + 0 Major + 0 Minor) or 5 rounds. Critical findings pause for user input. Mirrors the 2B↔2C spec review-fix loop pattern. Gates user approval before Stage 4.
 
 ### pr_create/SKILL.md
 

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-`full-orchestration` is a fully agentic software engineering pipeline for Claude Code. Given a ticket ID, it drives the entire workflow — from requirements gathering through PR creation — across five stages, each with a human-in-the-loop approval gate.
+`full-orchestration` is a fully agentic software engineering pipeline for Claude Code. Given a ticket ID, it drives the entire workflow — from requirements gathering through PR creation — across four stages, each with a human-in-the-loop approval gate.
 
 The goal: eliminate the manual glue between "here's a ticket" and "here's a reviewed PR." You stay in control at every stage; the plugin handles the orchestration.
 
@@ -34,22 +34,24 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
                             │ ✅ User approves spec + impl plan
                             ▼
                ┌──────────────────────────┐
-               │ Stage 3: TDD Implement.   │
-               │   (TddEngineer agent)    │
-               │   Feature branch           │
-               └────────────┬─────────────┘
-                            │ ✅ Tests pass — auto-proceeds
-                            ▼
-               ┌──────────────────────────┐
-               │  Stage 4: Code Review     │
-               │  (deep-review plugin)     │
-               │  skeptic + advocate +     │
-               │  architect agents         │
+               │ Stage 3: Implement &      │
+               │          Review           │
+               │                          │
+               │  TddEngineer (TDD impl)  │
+               │       ▼                  │
+               │  Review-Fix Loop:        │
+               │   deep-review ──► parse  │
+               │       ▼                  │
+               │   TddEngineer (fix w/    │
+               │   full state context)    │
+               │       ▼                  │
+               │   (repeat until converge │
+               │    or 5 rounds)          │
                └────────────┬─────────────┘
                             │ ✅ User approves review
                             ▼
                ┌──────────────────────────┐
-               │  Stage 5: PR Creation     │
+               │  Stage 4: PR Creation     │
                │  (gh CLI)                 │
                └──────────────────────────┘
 ```
@@ -62,7 +64,7 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 | Run shell commands | Yes | -- |
 | Git operations | Yes | -- |
 | Create PRs (`gh` CLI) | Yes | -- |
-| Multi-agent orchestration | Yes (subagents) | Coordinated 5-stage pipeline with approval gates |
+| Multi-agent orchestration | Yes (subagents) | Coordinated 4-stage pipeline with approval gates |
 | Ticket ingestion | No | MCP-based fetch from Jira, Linear, GitHub Issues |
 | Codebase exploration team | No | 3-5 parallel explorer agents that map affected areas |
 | Spec authoring & review | No | Structured spec with 4-reviewer adversarial review |
@@ -76,11 +78,9 @@ The goal: eliminate the manual glue between "here's a ticket" and "here's a revi
 
 2. **Spec & Design** — An explorer team fans out across the codebase to identify affected areas. The spec architect synthesizes findings into a technical spec. Four specialist reviewers (maintainability, security, efficiency, completeness) insert inline comments directly into the spec, and the spec architect addresses them in an autonomous loop (up to 5 rounds). An implementation planner produces a step-by-step build plan, which goes through the same review-fix loop. The user sees only the final clean documents.
 
-3. **TDD Implementation** — A `TddEngineer` agent works on the current branch. Writes failing tests first, then implements until tests pass. Runs the full test suite before reporting back.
+3. **Implement & Review** — A `TddEngineer` agent implements the plan using strict TDD on the current branch. Once tests pass, a review-fix loop begins: `deep-review` analyzes the full branch diff, findings are parsed and classified, and TddEngineer auto-fixes Major and Minor findings with full state context (spec, plan, codebase context). The loop repeats until convergence (0 actionable findings) or 5 rounds. Critical findings pause for user input.
 
-4. **Code Review** — Delegates to the `deep-review` plugin for a three-phase auto-converging review. Phase A reviews the full branch diff, Phase B iteratively re-reviews only fix changes (up to 5 iterations), and Phase C runs a final full-branch validation. Minor and Major findings are auto-fixed; only Critical findings pause for user input.
-
-5. **PR Creation** — Creates a PR via the `gh` CLI with a structured description, links the original ticket, and includes the review summary.
+4. **PR Creation** — Creates a PR via the `gh` CLI with a structured description, links the original ticket, and includes the review summary.
 
 Each stage transition is an **approval gate**: the pipeline pauses, shows you the output, and waits for explicit confirmation before proceeding.
 
@@ -109,9 +109,9 @@ claude mcp add --transport sse linear-server https://mcp.linear.app/sse
 |-----|----------|
 | [01 — Ticket Intake](01-ticket-intake.md) | Stage 1: fetching and parsing tickets |
 | [02 — Spec & Design](02-spec-design.md) | Stage 2: exploration, spec authoring, review |
-| [03 — TDD Implementation](03-tdd-implementation.md) | Stage 3: test-first implementation workflow |
-| [04 — Code Review](04-code-review.md) | Stage 4: multi-agent adversarial review |
-| [05 — PR Creation](05-pr-creation.md) | Stage 5: PR creation and ticket linking |
+| [03 — TDD Implementation](03-tdd-implementation.md) | Stage 3 (impl phase): test-first implementation workflow |
+| [04 — Code Review](04-code-review.md) | Stage 3 (review phase): multi-agent adversarial review-fix loop |
+| [05 — PR Creation](05-pr-creation.md) | Stage 4: PR creation and ticket linking |
 | [06 — Orchestrator Skill](06-orchestrator.md) | The `/swe` entry point and stage coordination |
 | [07 — Plugin Components](07-plugin-components.md) | Full inventory of skills, agents, and hooks |
 | [08 — Setup Guide](08-setup-guide.md) | Installation, MCP configuration, prerequisites |

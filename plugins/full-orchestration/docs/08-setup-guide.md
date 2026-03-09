@@ -179,13 +179,3 @@ gh auth status  # Confirm the correct account and scopes
   Run tests with: `make test`
   ```
 
-### Pipeline state is stale
-
-**Symptom:** `/swe` resumes from an old stage instead of starting fresh.
-
-**Fix:**
-```bash
-rm -rf .claude/swe-state/
-```
-
-Then re-run `/swe` to start a clean pipeline.

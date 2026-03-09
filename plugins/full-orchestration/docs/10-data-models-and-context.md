@@ -17,7 +17,7 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
   "ticket_id": "PROJ-123",
   "target_branch": "main",
   "feature_branch": "feat/PROJ-123",
-  "current_stage": "intake | spec | implement | review | pr",
+  "current_stage": "intake | spec | implement_and_review | pr",
   "status": "in_progress | failed | aborted | completed",
   "stages": {
     "intake": {
@@ -45,14 +45,13 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
     "review": {
       "completed": false,
       "approved": false,
-      "last_review_commit": null,
       "iterations": 0,
-      "phase": "initial | incremental | validation | capped | complete",
+      "phase": "pending | reviewing | capped | complete",
       "review_iteration_file": ".claude/swe-state/PROJ-123/review-iteration.md",
       "review_summary_file": ".claude/swe-state/PROJ-123/review-summary.md",
       "findings": {
         "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
-        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "deferred": 0, "dismissed": 0 },
+        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "dismissed": 0 },
         "minor": { "total": 0, "fixed": 0, "auto_fixed": 0 },
         "suggestions": 0,
         "dismissed": []
@@ -76,14 +75,14 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
 | Field | Written By | Read By |
 |---|---|---|
 | `ticket_id` | `/swe` (init) | All stages |
-| `target_branch` | `/swe` (init) | `code_review`, `pr_create` |
-| `feature_branch` | `/swe` (init), `tdd_implement` (confirms) | `tdd_implement`, `code_review`, `pr_create` |
-| `current_stage` | `/swe` (each dispatch) | `/swe` (resumption) |
-| `status` | `/swe` (each dispatch) | `/swe` (resumption) |
+| `target_branch` | `/swe` (init) | `implement_and_review`, `pr_create` |
+| `feature_branch` | `/swe` (init), `implement_and_review` (confirms) | `implement_and_review`, `pr_create` |
+| `current_stage` | `/swe` (each dispatch) | — |
+| `status` | `/swe` (each dispatch) | — |
 | `stages.intake.*` | `ticket_intake` | `spec_writer` |
-| `stages.spec.*` | `spec_writer` | `tdd_implement` |
-| `stages.implement.*` | `tdd_implement` | `code_review` |
-| `stages.review.*` | `code_review` | `pr_create` |
+| `stages.spec.*` | `spec_writer` | `implement_and_review` |
+| `stages.implement.*` | `implement_and_review` | `pr_create` |
+| `stages.review.*` | `implement_and_review` | `pr_create` |
 | `stages.pr.*` | `pr_create` | `/swe` (completion) |
 
 ### Status Values
@@ -95,16 +94,14 @@ This is the primary coordination mechanism. Every stage reads it at start, merge
 | `aborted` | User chose to abort at a gate |
 | `completed` | All stages finished successfully |
 
-### Merge Semantics
+### Write Semantics
 
 Every skill follows this contract:
 
-1. Read existing state file from disk
-2. Deep-merge new fields into the existing object
+1. Read the state file from disk
+2. Deep-merge its own fields into the existing object
 3. Never overwrite fields from prior stages
 4. Write the merged result back
-
-This enables resumption — `/swe PROJ-123 --from=implement` loads state and validates that all prior stages show `completed: true`.
 
 ---
 
@@ -204,7 +201,7 @@ Stage 2 has 5 sub-stages (2A–2E) producing 3 artifact files. All are stored un
 
 **Path**: `.claude/specs/{ticket-id}-context.md`
 **Producer**: `spec_writer` orchestrator (merges explorer outputs)
-**Consumers**: SpecArchitect (2B), ImplPlanner (2D), TddEngineer (Stage 3), code_review iterate loop (Stage 4)
+**Consumers**: SpecArchitect (2B), ImplPlanner (2D), TddEngineer (Stage 3), implement_and_review review-fix loop (Stage 3)
 
 ```markdown
 # Codebase Context: {ticket-id}
@@ -261,7 +258,7 @@ All explorers are prompt-only `Explore` subagents (built-in Claude Code agent ty
 
 **Path**: `.claude/specs/{ticket-id}.md`
 **Producer**: `SpecArchitect` agent
-**Consumers**: ImplPlanner (2D), spec_review (2C), TddEngineer (Stage 3), pr_create (Stage 5)
+**Consumers**: ImplPlanner (2D), spec_review (2C), TddEngineer (Stage 3), pr_create (Stage 4)
 
 ```markdown
 # Technical Spec: {ticket-title}
@@ -352,7 +349,7 @@ Detection: ticket ID = everything before first known suffix (`-impl.md`, `-conte
 
 **Path**: `.claude/specs/{ticket-id}-impl.md`
 **Producer**: `ImplPlanner` agent
-**Consumers**: spec_review (2E), TddEngineer (Stage 3), code_review iterate loop (Stage 4), pr_create (Stage 5)
+**Consumers**: spec_review (2E), TddEngineer (Stage 3), implement_and_review review-fix loop (Stage 3), pr_create (Stage 4)
 
 ```markdown
 # Implementation Plan: {ticket-title}
@@ -404,13 +401,15 @@ Revert procedure, down migrations, feature flags.
 
 ---
 
-## Stage 3: TDD Implementation
+## Stage 3: Implement & Review
+
+Stage 3 is managed by a single skill — `implement_and_review` — which handles TDD implementation followed by a review-fix loop. Both `stages.implement` and `stages.review` state sections are written by this skill.
 
 ### Implementation Summary
 
 **Path**: `.claude/swe-state/{ticket-id}/impl-summary.md`
-**Producer**: `TddEngineer` agent
-**Consumers**: `code_review` (Stage 4), `pr_create` (Stage 5)
+**Producer**: `TddEngineer` agent (via `implement_and_review`)
+**Consumers**: `implement_and_review` (review-fix loop), `pr_create` (Stage 4)
 
 ```markdown
 # Implementation Summary: {ticket-id}
@@ -431,7 +430,7 @@ feat/PROJ-123
 - Any differences from the implementation doc, with rationale
 
 ## Notes for Review
-- Areas that need extra scrutiny in Stage 4
+- Areas that need extra scrutiny
 - Trade-offs made during implementation
 ```
 
@@ -442,7 +441,7 @@ feat/PROJ-123
 | Agent file | `agents/TddEngineer.agent.md` |
 | Model | `opus` |
 | Tools | Read, Grep, Glob, Edit, Write, Bash |
-| Reads | `{ticket-id}.md`, `{ticket-id}-impl.md`, `{ticket-id}-context.md` |
+| Reads | `{ticket-id}.md`, `{ticket-id}-impl.md`, `{ticket-id}-context.md`, `review-iteration.md` (during fix loop) |
 | Writes | `.claude/swe-state/{ticket-id}/impl-summary.md`, code commits on feature branch |
 
 #### TDD Cycle Per Step
@@ -476,7 +475,7 @@ COMMIT → "feat({scope}): {what} [TDD step N/{total}]"
 | TDD step | `feat({scope}): {what} [TDD step N/{total}]` |
 | Dependency install | `chore: add {package} dependency` |
 | Blocked step | `WIP: {step description}` |
-| Review fix (Stage 4) | `review: fix {severity} — {short description}` |
+| Review fix | `review: fix {severity} — {short description}` |
 
 #### Error Handling
 
@@ -486,10 +485,6 @@ COMMIT → "feat({scope}): {what} [TDD step N/{total}]"
 | Green: fails after 5 attempts | WIP commit, note blocker, continue if possible |
 | Refactor: regression | Revert refactor, commit pre-refactor, note in summary |
 | Full suite: unrelated failure | Investigate; if pre-existing, note in summary |
-
----
-
-## Stage 4: Code Review
 
 ### Deep-Review Context File (ephemeral)
 
@@ -523,7 +518,7 @@ observations:
 
 ### Deep-Review Output: Structured Findings Block
 
-Appended to the human-readable review as a machine-readable YAML comment block. This is the **schema contract** between `deep_review` (producer) and `code_review` (consumer).
+Appended to the human-readable review as a machine-readable YAML comment block. This is the **schema contract** between `deep_review` (producer) and `implement_and_review` (consumer).
 
 ```markdown
 <!-- structured-findings
@@ -567,22 +562,22 @@ structured-findings -->
 | deep-review Priority | Pipeline Severity | Action |
 |---|---|---|
 | Critical | **Critical** | Breaks auto-loop — user decides: fix, dismiss, or abort |
-| High | **Major** | Auto-fix via TddEngineer; no user input required |
-| Medium | **Minor** | Auto-fix via TddEngineer; demote to suggestion if fix fails |
+| High | **Major** | Auto-fix via TddEngineer with full state context; no user input required |
+| Medium | **Minor** | Auto-fix via TddEngineer with full state context; demote to suggestion if fix fails |
 | Low | **Suggestion** | Collect for follow-up items; does not block convergence |
 
 ### Review Iteration File
 
 **Path**: `.claude/swe-state/{ticket-id}/review-iteration.md`
-**Producer**: `code_review` skill (each iteration, overwritten)
+**Producer**: `implement_and_review` skill (each iteration, overwritten)
 
 Contains the consolidated review from the latest iteration with severity classifications.
 
 ### Review Summary
 
 **Path**: `.claude/swe-state/{ticket-id}/review-summary.md`
-**Producer**: `code_review` skill (Phase 3)
-**Consumers**: `pr_create` (Stage 5)
+**Producer**: `implement_and_review` skill (Phase 4)
+**Consumers**: `pr_create` (Stage 4)
 
 ```
 Code Review Complete: {ticket-id}
@@ -594,34 +589,42 @@ Resolved:
   - {count} Critical, {count} Major, {count} Minor fixed
 
 Remaining:
-  - {count} deferred (see follow-up items)
   - {count} dismissed (with rationale)
 
 Follow-up Items:
-  - {suggestion or deferred finding}
+  - {suggestion}
 
 Tests: {PASS/FAIL} after review fixes
 ```
 
-### Auto-Fix Context Passing
+### Auto-Fix Context Passing (Full State Reference)
 
-In Phases 2A and 2B, when Major or Minor findings need auto-fixing, `code_review` spawns TddEngineer with a scoped prompt:
+In the review-fix loop, when Major or Minor findings need auto-fixing, `implement_and_review` spawns TddEngineer with a **full-context prompt** that references the state file:
 
 ```
 subagent_type: full-orchestration:TddEngineer
 prompt: |
-  Applying review fixes on {feature_branch}.
+  State file: .claude/swe-state/{ticket-id}.json
+  Read state to locate:
+  - stages.spec.spec_file
+  - stages.spec.impl_plan_file
+  - stages.spec.context_file
+  - stages.implement.impl_summary_file
+  - stages.review.review_iteration_file
   Findings to fix:
-  {list with file:line references and severity}
-
-  For each: write/update test, apply fix, run tests, commit.
-  Commit message: "review: fix {severity} — {description}"
-  Do NOT modify beyond scope of these fixes.
+  {list with id, file:line, severity, summary}
+  {user direction for Critical fixes if any}
+  For each: write/update test, apply fix, run tests.
+  Commit: "review: fix {severity} — {description}"
+  Run full suite when done.
+  Write updated summary to impl_summary_file.
 ```
+
+This ensures the TddEngineer always has access to the original spec, implementation plan, and codebase context when applying review fixes — not just the scoped finding list.
 
 ### User-Directed Iterate Context Passing
 
-When the user chooses "Iterate" at the approval gate, `code_review` spawns TddEngineer with the state file reference and user direction:
+When the user chooses "Iterate" at the approval gate, `implement_and_review` spawns TddEngineer with the same full state reference plus user direction:
 
 ```
 subagent_type: full-orchestration:TddEngineer
@@ -646,7 +649,7 @@ prompt: |
   Write updated summary to the impl_summary_file path from state.
 ```
 
-After completion, `code_review` updates `last_review_commit` and returns to Phase 2B.
+After TddEngineer completes, return to the review-fix loop.
 
 ### Review Phase Tracking
 
@@ -654,15 +657,14 @@ The `stages.review.phase` field tracks progression:
 
 | Phase Value | Meaning |
 |---|---|
-| `initial` | Phase 2A in progress |
-| `incremental` | Phase 2B in progress |
-| `validation` | Phase 2C in progress |
+| `pending` | Implementation not yet reviewed |
+| `reviewing` | Review-fix loop in progress |
 | `capped` | Hit iteration cap without convergence |
 | `complete` | User approved at gate |
 
 ---
 
-## Stage 5: PR Creation
+## Stage 4: PR Creation
 
 ### PR Content (generated, not persisted as file)
 
@@ -731,12 +733,12 @@ Reviewed by: {reviewer agents}
 |---|---|---|---|
 | `.claude/swe-state/{ticket-id}.json` | `/swe` (init), all stages (merge) | All stages | Entire pipeline |
 | `.claude/swe-state/{ticket-id}/ticket.json` | `ticket_intake` | `spec_writer`, `spec_review`, `pr_create` | Entire pipeline |
-| `.claude/specs/{ticket-id}-context.md` | `spec_writer` (2A) | SpecArchitect, ImplPlanner, TddEngineer, code_review iterate | Entire pipeline |
-| `.claude/specs/{ticket-id}.md` | SpecArchitect (2B) | spec_review (2C), ImplPlanner (2D), TddEngineer, code_review iterate, pr_create | Entire pipeline |
-| `.claude/specs/{ticket-id}-impl.md` | ImplPlanner (2D) | spec_review (2E), TddEngineer, code_review iterate, pr_create | Entire pipeline |
-| `.claude/swe-state/{ticket-id}/impl-summary.md` | TddEngineer | `code_review`, `pr_create` | Stage 3 onward |
-| `.claude/swe-state/{ticket-id}/review-iteration.md` | `code_review` (overwritten each iteration) | `code_review` (approval gate) | Stage 4 |
-| `.claude/swe-state/{ticket-id}/review-summary.md` | `code_review` | `pr_create` | Stage 4 onward |
+| `.claude/specs/{ticket-id}-context.md` | `spec_writer` (2A) | SpecArchitect, ImplPlanner, TddEngineer, `implement_and_review` review-fix loop | Entire pipeline |
+| `.claude/specs/{ticket-id}.md` | SpecArchitect (2B) | spec_review (2C), ImplPlanner (2D), TddEngineer, `implement_and_review` review-fix loop, pr_create | Entire pipeline |
+| `.claude/specs/{ticket-id}-impl.md` | ImplPlanner (2D) | spec_review (2E), TddEngineer, `implement_and_review` review-fix loop, pr_create | Entire pipeline |
+| `.claude/swe-state/{ticket-id}/impl-summary.md` | TddEngineer (via `implement_and_review`) | `implement_and_review` review-fix loop, `pr_create` | Stage 3 onward |
+| `.claude/swe-state/{ticket-id}/review-iteration.md` | `implement_and_review` (overwritten each iteration) | `implement_and_review` (approval gate), TddEngineer (fix context) | Stage 3 |
+| `.claude/swe-state/{ticket-id}/review-summary.md` | `implement_and_review` | `pr_create` | Stage 3 onward |
 
 ### Ephemeral Files
 
@@ -749,45 +751,61 @@ Reviewed by: {reviewer agents}
 ## Context Flow Diagram
 
 ```
-Stage 1                    Stage 2                      Stage 3           Stage 4              Stage 5
-─────────────────────────────────────────────────────────────────────────────────────────────────────────
+Stage 1                    Stage 2                      Stage 3: Implement & Review        Stage 4
+─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 ticket.json ──────────────► spec_writer
                             │
-                            ├─ 2A: Explorers ──► context.md ──────────► TddEngineer ──► code_review
-                            │                                                           (iterate loop)
-                            ├─ 2B: SpecArchitect ──► spec.md ────────► TddEngineer ──► code_review ──► pr_create
-                            │                           │                               (iterate loop)
-                            │                           ▼
-                            ├─ 2B↔2C: review-fix loop (inline comments in spec.md)
-                            │
-                            ├─ 2D: ImplPlanner ──► impl.md ──────────► TddEngineer ──► code_review
-                            │                        │                                  (iterate loop)
-                            │                        ▼
-                            └─ 2D↔2E: review-fix loop (inline comments in impl.md)
+                            ├─ 2A: Explorers ──► context.md ──┐
+                            │                                  │
+                            ├─ 2B: SpecArchitect ──► spec.md ─┤
+                            │                           │      │
+                            │                           ▼      │
+                            ├─ 2B↔2C: review-fix loop  │      │
+                            │                          │      │
+                            ├─ 2D: ImplPlanner ──► impl.md ───┤
+                            │                        │         │
+                            │                        ▼         │
+                            └─ 2D↔2E: review-fix loop          │
+                                                               │
+                                                               ▼
+                                                    implement_and_review
+                                                    ┌──────────────────┐
+                                                    │ TddEngineer      │
+                                                    │ (initial impl)   │
+                                                    │      │           │
+                                                    │      ▼           │
+                                                    │ impl-summary.md  │
+                                                    │      │           │
+                                                    │      ▼           │
+                                                    │ Review-Fix Loop  │◄──┐
+                                                    │  deep_review     │   │
+                                                    │  (full branch)   │   │
+                                                    │      │           │   │
+                                                    │      ▼           │   │
+                                                    │  Parse findings  │   │
+                                                    │      │           │   │
+                                                    │  TddEngineer     │   │
+                                                    │  (fix w/ full    │   │
+                                                    │   state context) │───┘
+                                                    │      │           │
+                                                    │      ▼           │
+                                                    │ review-summary ──┼──► pr_create
+                                                    └──────────────────┘
 
-                                                                        TddEngineer
-                                                                            │
-                                                                            ▼
-                                                                      impl-summary.md ──► code_review ──► pr_create
-                                                                                              │
-                                                                                              ▼
-                                                                                        review-summary.md ──► pr_create
-
-                                                                        deep_review
-                                                                        (ephemeral)
-                                                                            │
-                                                                            ├─ context.yaml ──► Advocate
-                                                                            ├─ context.yaml ──► Skeptic
-                                                                            └─ context.yaml ──► Architect
-                                                                                    │
-                                                                                    ▼
-                                                                          structured-findings
-                                                                          (in review output)
-                                                                                    │
-                                                                                    ▼
-                                                                          code_review parses
-                                                                          and maps severity
+                                                    deep_review (ephemeral)
+                                                        │
+                                                        ├─ context.yaml ──► Advocate
+                                                        ├─ context.yaml ──► Skeptic
+                                                        └─ context.yaml ──► Architect
+                                                                │
+                                                                ▼
+                                                      structured-findings
+                                                      (in review output)
+                                                                │
+                                                                ▼
+                                                    implement_and_review
+                                                    parses and maps severity
 ```
 
 ---
@@ -803,10 +821,10 @@ ticket.json ──────────────► spec_writer
 | EfficiencyReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | CompletenessReviewer | full-orchestration | sonnet | Read, Grep, Edit | Spec/plan review (2C/2E) |
 | ImplPlanner | full-orchestration | opus | Read, Glob, Grep, Edit, Write | Impl planning (2D) + fix comments (2E) |
-| TddEngineer | full-orchestration | opus | Read, Grep, Glob, Edit, Write, Bash | Implementation (3) + review fixes (4) |
-| Advocate | deep-review | (per def) | Read-only | Code review — defense (4) |
-| Skeptic | deep-review | (per def) | Read-only | Code review — attack (4) |
-| Architect | deep-review | (per def) | Read-only | Code review — direction (4) |
+| TddEngineer | full-orchestration | opus | Read, Grep, Glob, Edit, Write, Bash | Implementation (3) + review fixes (3, with full state context) |
+| Advocate | deep-review | (per def) | Read-only | Code review — defense (3) |
+| Skeptic | deep-review | (per def) | Read-only | Code review — attack (3) |
+| Architect | deep-review | (per def) | Read-only | Code review — direction (3) |
 
 ---
 
@@ -817,6 +835,6 @@ ticket.json ──────────────► spec_writer
 | 1 | After intake | Parsed ticket summary | Confirm / Edit / Re-fetch |
 | 2B↔2C | After spec review-fix loop | Clean spec (review comments resolved and stripped) | Approve / Request changes |
 | 2D↔2E | After impl plan review-fix loop | Clean impl plan (review comments resolved and stripped) | Approve / Request changes |
-| 4 | After review loop | Final review + remaining findings | Approve / Iterate / Abort |
-| 5 | Before PR creation | PR title, labels, body preview | Create / Edit / Cancel |
-| 5 | Before push | `git push -u origin {branch}` | Confirm / Cancel |
+| 3 | After review-fix loop | Final review + remaining findings | Approve / Iterate / Abort |
+| 4 | Before PR creation | PR title, labels, body preview | Create / Edit / Cancel |
+| 4 | Before push | `git push -u origin {branch}` | Confirm / Cancel |
