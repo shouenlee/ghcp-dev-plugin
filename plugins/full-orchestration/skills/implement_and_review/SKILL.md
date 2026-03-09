@@ -82,12 +82,53 @@ WHILE iteration < 5:
        On failure: retry once. If second failure, break loop and
        proceed to user gate with warning that review could not complete.
 
-    2. Parse structured-findings. Map priorities:
-       Critical → Critical, High → Major, Medium → Minor, Low → Suggestion.
-       Write consolidated review to review_iteration_file path from state
-       (overwritten each iteration).
+    2. Extract the structured-findings block from deep_review output.
+       The block is YAML wrapped in an HTML comment:
 
-    3. CONVERGED = 0 Critical + 0 Major + 0 Minor
+         <!-- structured-findings
+         findings:
+           - id: 1
+             priority: critical | high | medium | low
+             file: "path"
+             line: N or null
+             summary: "description"
+             agents: [advocate, skeptic, architect]
+         structured-findings -->
+
+       Parse the YAML between the delimiters. Map each finding's
+       priority to pipeline severity:
+         critical → Critical, high → Major, medium → Minor, low → Suggestion.
+
+       Write to review_iteration_file path from state (overwritten
+       each iteration) as JSON:
+
+         {
+           "iteration": N,
+           "findings": [
+             {
+               "id": 1,
+               "severity": "Critical|Major|Minor|Suggestion",
+               "file": "path",
+               "line": N,
+               "summary": "description",
+               "agents": ["advocate", "skeptic"],
+               "status": "open|fixed|dismissed"
+             }
+           ],
+           "counts": {
+             "critical": 0, "major": 0, "minor": 0, "suggestion": 0
+           }
+         }
+
+       Preserve findings from prior iterations: if a finding with
+       the same file+line+summary existed in the previous iteration
+       and was marked "fixed" or "dismissed", carry that status forward.
+       New findings default to "open".
+
+    3. Read counts from the review_iteration_file JSON.
+       CONVERGED = counts.critical == 0 AND counts.major == 0
+                   AND counts.minor == 0
+       (Suggestions are non-blocking and never prevent convergence.)
        IF CONVERGED → break
 
     4. Critical → STOP the auto-loop. Present all findings with
@@ -98,7 +139,13 @@ WHILE iteration < 5:
        {id, severity, summary, rationale}.
        Major + Minor → queue for auto-fix.
 
-    5. Spawn TddEngineer WITH FULL CONTEXT:
+    5. Build the findings list for TddEngineer from the
+       review_iteration_file JSON. Include only "open" findings
+       with severity Critical, Major, or Minor. Format each as:
+         - #{id} [{severity}] {file}:{line} — {summary}
+       Append any user direction for Critical fixes.
+
+       Spawn TddEngineer WITH FULL CONTEXT:
        subagent_type: full-orchestration:TddEngineer
        max_turns: 20
        prompt: |
@@ -110,8 +157,7 @@ WHILE iteration < 5:
          - stages.implement.impl_summary_file
          - stages.review.review_iteration_file
          Findings to fix:
-         {list with id, file:line, severity, summary}
-         {user direction for Critical fixes if any}
+         {formatted findings list from above}
          For each: write/update test, apply fix, run tests.
          Commit: "review: fix {severity} — {description}"
          Run full suite when done.
@@ -123,8 +169,11 @@ WHILE iteration < 5:
          dismiss (with rationale), or abort.
        Do not silently swallow failures.
 
-    6. Update state: stages.review.iterations = iteration,
-       update findings counts (total, fixed, auto_fixed, dismissed).
+    6. After TddEngineer completes, re-read review_iteration_file.
+       Mark findings that were fixed (file no longer has the issue
+       or test now passes) as status "fixed". Update state:
+       stages.review.iterations = iteration, update findings counts
+       from the JSON (total, fixed, auto_fixed, dismissed).
 
 IF iteration == 5 AND NOT converged:
     Set stages.review.phase = "capped".

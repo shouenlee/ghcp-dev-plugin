@@ -270,7 +270,7 @@ Each finding in the consolidated review MUST have a corresponding entry in this 
 
 #### Schema Contract
 
-This schema is a contract between `deep_review` (producer) and `code_review` (consumer). Changes must be synchronized across both plugins.
+This schema is a contract between `deep_review` (producer) and its consumers: `code_review` and `full-orchestration:implement_and_review`. Changes must be synchronized across all three plugins.
 
 | Field | Type | Allowed Values |
 |---|---|---|
