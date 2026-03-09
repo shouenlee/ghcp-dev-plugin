@@ -71,20 +71,16 @@ Resolves [{ticket-id}]({ticket-url})
 
 ## Phase 3: Create PR
 
-1. **History cleanup** (optional): Show commit count on feature branch (`git rev-list --count {target_branch}..{feature_branch}`). If more than 1 commit, ask user:
-   - **Keep all commits** → proceed as-is
-   - **Squash into one commit** → `git reset --soft {target_branch} && git commit -m "{pr_title}"` (with user confirmation since this rewrites history)
-   - **Skip** → proceed as-is
-2. **Rebase check**: Fetch latest target branch and check for divergence:
+1. **Rebase check**: Fetch latest target branch and check for divergence:
    ```bash
    git fetch origin {target_branch}
    git merge-base --is-ancestor origin/{target_branch} HEAD
    ```
    If target has moved ahead, rebase: `git rebase origin/{target_branch}`. On conflict → present conflicting files to user and pause. Do NOT force-push or auto-resolve.
-3. **Push** (with user confirmation): `git push -u origin {feature_branch}`
-4. **Check existing**: `gh pr list --head {feature_branch} --json number,url` — offer to update if exists
-5. **Create**: `gh pr create --title "{title}" --body "{body}" --base {target_branch}`
-6. **Labels**: `gh pr edit {number} --add-label "{labels}"`
+2. **Push** (with user confirmation): `git push -u origin {feature_branch}`
+3. **Check existing**: `gh pr list --head {feature_branch} --json number,url` — offer to update if exists
+4. **Create**: `gh pr create --title "{title}" --body "{body}" --base {target_branch}`
+5. **Labels**: `gh pr edit {number} --add-label "{labels}"`
 
 ---
 

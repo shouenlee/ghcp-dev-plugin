@@ -59,6 +59,63 @@ Merge outputs into `.claude/specs/{ticket-id}-context.md` (path from `stages.spe
 
 ---
 
+## Review-Fix Loop
+
+This loop is used twice in this skill — once for the spec (2B↔2C) and once for the impl plan (2D↔2E). The steps are identical; only the parameters change.
+
+### Parameters
+
+| | Spec loop (2B↔2C) | Impl plan loop (2D↔2E) |
+|---|---|---|
+| **document** | `stages.spec.spec_file` | `stages.spec.impl_plan_file` |
+| **author_agent** | `full-orchestration:SpecArchitect` | `full-orchestration:ImplPlanner` |
+| **iteration_field** | `stages.spec.spec_review_iterations` | `stages.spec.impl_review_iterations` |
+| **next phase** | 2D: Implementation Planning | Stage 3 |
+
+### Steps
+
+Start with `iteration = 0`.
+
+**Step 1 — Review**: Increment `iteration`. Run `/spec_review {document path from state}`. On failure, retry once. If second failure, skip to Step 5 with a warning that review could not complete.
+
+**Step 2 — Check convergence**: If `/spec_review` reports 0 OPEN comments, the document has converged. Skip to Step 5 for cleanup and user gate.
+
+**Step 3 — Fix**: Spawn the author agent to address comments:
+
+```
+subagent_type: {author_agent}
+max_turns: 15
+prompt: |
+  State file: .claude/swe-state/{ticket-id}.json
+  Read state to locate the document under review, context_file,
+  and stages.intake.ticket_file.
+
+  Review comments have been added to the document. For each
+  comment marked OPEN:
+  1. Understand the reviewer's concern
+  2. Reference the ticket and codebase context as needed
+  3. Modify the relevant section to address it
+  4. Change the comment status from OPEN to RESOLVED
+
+  Do NOT delete comments. Do NOT add new content beyond
+  addressing the comments. Do NOT change sections with no comments.
+
+  When done, report: number of comments addressed, any you
+  couldn't resolve (with explanation).
+```
+
+**Step 4 — Update state**: Set `{iteration_field} = iteration` in the state file. If iteration < 5, go back to Step 1.
+
+**Step 5 — Cleanup**: Read the document. If capped with OPEN comments, extract all `> **[...|OPEN]**` lines and save as a list for the user gate. Remove all blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`. Write the cleaned file back.
+
+**Step 6 — User gate**: Present the clean document. If OPEN comments remained at cap, show the extracted list separately. User chooses:
+- **Approve** → proceed to {next phase}
+- **Request changes** → user provides direction, spawn {author_agent} with the Step 3 prompt plus user direction appended. Set `iteration = min(iteration, 4)` so there is at least 1 review pass after a user-requested revision. Go back to Step 1.
+
+If iteration reaches 5 with OPEN comments remaining, report: "{N} OPEN comments remain after 5 rounds." Then proceed to Step 5.
+
+---
+
 ## 2B: Spec Generation
 
 ```
@@ -71,70 +128,7 @@ prompt: |
   Read the ticket and context, then write the spec to the spec_file path.
 ```
 
----
-
-## 2B↔2C: Spec Review-Fix Loop (max 5 rounds)
-
-Autonomous loop — no user interaction until convergence or cap.
-
-### Loop
-
-```
-iteration = 0
-WHILE iteration < 5:
-    iteration += 1
-
-    1. Run /spec_review {spec_file path from state}
-       → Returns OPEN comment count by severity
-       On failure: retry once. If second failure, break loop and
-       proceed to user gate with warning that review could not complete.
-
-    2. IF 0 OPEN comments → CONVERGED → break
-
-    3. Spawn author agent to address comments:
-       subagent_type: full-orchestration:SpecArchitect
-       max_turns: 15
-       prompt: |
-         State file: .claude/swe-state/{ticket-id}.json
-         Read state to locate: spec_file, context_file, and
-         stages.intake.ticket_file.
-
-         Review comments have been added to the spec. For each
-         comment marked OPEN:
-         1. Understand the reviewer's concern
-         2. Reference the ticket and codebase context as needed
-         3. Modify the relevant section to address it
-         4. Change the comment status from OPEN to RESOLVED
-
-         Do NOT delete comments. Do NOT add new content beyond
-         addressing the comments. Do NOT change sections with no comments.
-
-         When done, report: number of comments addressed, any you
-         couldn't resolve (with explanation).
-
-    4. Update state: stages.spec.spec_review_iterations = iteration
-    5. Continue loop (next iteration re-reviews)
-
-IF iteration == 5 AND OPEN comments remain:
-    Report: "Spec review did not fully converge after 5 rounds.
-    {N} OPEN comments remain."
-```
-
-### Cleanup
-
-After loop exits (converged or capped):
-1. Read the spec file
-2. If capped with OPEN comments: extract all `> **[...|OPEN]**` lines and save as a list for the user gate
-3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
-4. Write the cleaned file back
-
-### User Gate
-
-Present the clean spec to the user. If OPEN comments remained at cap, show the extracted list separately.
-
-User chooses:
-- **Approve** → proceed to 2D
-- **Request changes** → user provides direction, spawn SpecArchitect with direction (same state-referencing prompt as step 3 above, plus user direction appended). Before re-entering the loop, set `iteration = min(iteration, 4)` so there is always at least 1 review pass after a user-requested revision. Then re-enter the loop.
+After SpecArchitect completes, run the **Review-Fix Loop** with the **Spec** parameters.
 
 ---
 
@@ -151,70 +145,7 @@ prompt: |
   the impl_plan_file path.
 ```
 
----
-
-## 2D↔2E: Impl Plan Review-Fix Loop (max 5 rounds)
-
-Same loop mechanics as 2B↔2C, but targeting the implementation plan.
-
-### Loop
-
-```
-iteration = 0
-WHILE iteration < 5:
-    iteration += 1
-
-    1. Run /spec_review {impl_plan_file path from state}
-       → Returns OPEN comment count by severity
-       On failure: retry once. If second failure, break loop and
-       proceed to user gate with warning that review could not complete.
-
-    2. IF 0 OPEN comments → CONVERGED → break
-
-    3. Spawn author agent to address comments:
-       subagent_type: full-orchestration:ImplPlanner
-       max_turns: 15
-       prompt: |
-         State file: .claude/swe-state/{ticket-id}.json
-         Read state to locate: impl_plan_file, spec_file,
-         context_file, and stages.intake.ticket_file.
-
-         Review comments have been added to the impl plan. For each
-         comment marked OPEN:
-         1. Understand the reviewer's concern
-         2. Reference the spec, ticket, and codebase context as needed
-         3. Modify the relevant section to address it
-         4. Change the comment status from OPEN to RESOLVED
-
-         Do NOT delete comments. Do NOT add new content beyond
-         addressing the comments. Do NOT change sections with no comments.
-
-         When done, report: number of comments addressed, any you
-         couldn't resolve (with explanation).
-
-    4. Update state: stages.spec.impl_review_iterations = iteration
-    5. Continue loop (next iteration re-reviews)
-
-IF iteration == 5 AND OPEN comments remain:
-    Report: "Impl plan review did not fully converge after 5 rounds.
-    {N} OPEN comments remain."
-```
-
-### Cleanup
-
-After loop exits (converged or capped):
-1. Read the impl plan file
-2. If capped with OPEN comments: extract all `> **[...|OPEN]**` lines and save as a list for the user gate
-3. Remove all remaining blockquote comment lines matching `> **[...|RESOLVED]**` or `> **[...|OPEN]**`
-4. Write the cleaned file back
-
-### User Gate
-
-Present the clean impl plan to the user. If OPEN comments remained at cap, show the extracted list separately.
-
-User chooses:
-- **Approve** → proceed to Stage 3
-- **Request changes** → user provides direction, spawn ImplPlanner with direction (same state-referencing prompt as step 3 above, plus user direction appended). Before re-entering the loop, set `iteration = min(iteration, 4)` so there is always at least 1 review pass after a user-requested revision. Then re-enter the loop.
+After ImplPlanner completes, run the **Review-Fix Loop** with the **Impl plan** parameters.
 
 ---
 

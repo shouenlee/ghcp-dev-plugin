@@ -80,7 +80,7 @@ List all pipeline artifacts that exist on disk:
 - Spec: .claude/specs/{ticket-id}.md
 - Impl Plan: .claude/specs/{ticket-id}-impl.md
 - Impl Summary: .claude/swe-state/{ticket-id}/impl-summary.md
-- Review: .claude/swe-state/{ticket-id}/review-iteration.md
+- Review: .claude/swe-state/{ticket-id}/review-iteration.json
 - Review Summary: .claude/swe-state/{ticket-id}/review-summary.md
 ```
 

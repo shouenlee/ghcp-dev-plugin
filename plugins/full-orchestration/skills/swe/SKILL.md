@@ -62,63 +62,7 @@ mkdir -p .claude/specs
 
 **Step 4 — Write full state file** to `.claude/swe-state/{ticket-id}.json`:
 
-```json
-{
-  "ticket_id": "{ticket-id}",
-  "target_branch": "{detected}",
-  "feature_branch": "{current-or-created}",
-  "current_stage": "intake",
-  "status": "in_progress",
-  "stages": {
-    "intake": {
-      "completed": false,
-      "ticket_file": ".claude/swe-state/{ticket-id}/ticket.json"
-    },
-    "spec": {
-      "completed": false,
-      "spec_file": ".claude/specs/{ticket-id}.md",
-      "impl_plan_file": ".claude/specs/{ticket-id}-impl.md",
-      "context_file": ".claude/specs/{ticket-id}-context.md",
-      "spec_review_iterations": 0,
-      "impl_review_iterations": 0
-    },
-    "implement": {
-      "completed": false,
-      "impl_summary_file": ".claude/swe-state/{ticket-id}/impl-summary.md",
-      "test_results": {
-        "new_tests": 0,
-        "modified_tests": 0,
-        "total_suite": null,
-        "coverage": null
-      }
-    },
-    "review": {
-      "completed": false,
-      "approved": false,
-      "iterations": 0,
-      "phase": "pending",
-      "review_iteration_file": ".claude/swe-state/{ticket-id}/review-iteration.md",
-      "review_summary_file": ".claude/swe-state/{ticket-id}/review-summary.md",
-      "findings": {
-        "critical": { "total": 0, "fixed": 0, "dismissed": 0 },
-        "major": { "total": 0, "fixed": 0, "auto_fixed": 0, "dismissed": 0 },
-        "minor": { "total": 0, "fixed": 0, "auto_fixed": 0 },
-        "suggestions": 0,
-        "dismissed": []
-      }
-    },
-    "pr": {
-      "completed": false,
-      "pr_number": null,
-      "pr_url": null,
-      "title": null,
-      "labels": [],
-      "ticket_updated": false,
-      "reviewers_requested": false
-    }
-  }
-}
-```
+Read the template from `state-template.json` in this skill's directory (find it via `**/swe/state-template.json`). Replace all `{ticket-id}` placeholders with the actual ticket ID, `{detected}` with the target branch, and `{current-or-created}` with the feature branch. Write the populated JSON to the state file path.
 
 This is the **single source of truth** for the pipeline. All file paths are pre-populated — downstream skills read paths from state, never construct them. Fields with `null`, `false`, `0`, or `[]` are populated by the owning stage.
 

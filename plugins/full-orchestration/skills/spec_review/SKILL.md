@@ -25,7 +25,7 @@ Four parallel reviewer agents each write a structured comment file. A single mer
 
 ## Phase 1: Gather Context
 
-**Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID (everything before first known suffix: `-impl.md`, `-context.md`).
+**Detect mode** from path: `{ticket-id}.md` → spec mode, `{ticket-id}-impl.md` → impl mode. Extract ticket ID from the filename by stripping suffixes in order: `-impl.md`, `-context.md`, `.md`. The first match wins (e.g., `PROJ-123-impl.md` → strip `-impl.md` → `PROJ-123`; `PROJ-123.md` → strip `.md` → `PROJ-123`).
 
 **Locate state**: `.claude/swe-state/{ticket-id}.json`. Read state to get: `stages.intake.ticket_file` and `stages.spec.context_file`.
 
