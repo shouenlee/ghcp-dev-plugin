@@ -169,7 +169,7 @@
       "version": "1.1.8",
       "author": {
         "name": "Alex Babanov, Shivani Grandhi",
-        "email": "alexbaba@microsoft.com, shgrandhi@microsoft.com"
+        "email": "alexbaba@microsoft.com"
       },
       "source": "./plugins/deep-review",
       "category": "code-quality",
