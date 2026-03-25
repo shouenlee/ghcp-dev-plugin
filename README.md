@@ -64,6 +64,18 @@ copilot plugin install python-lint-fix@ghcp-dev-plugins
 copilot plugin install deep-review@ghcp-dev-plugins
 ```
 
+### OpenCode
+
+Add to your project `opencode.json` or `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "plugin": ["ghcp-dev-plugin@git+https://github.com/shouenlee/ghcp-dev-plugin.git"]
+}
+```
+
+Restart OpenCode. All 31 skills and 16 agents install automatically. See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
+
 ## Usage
 
 ### Code Quality
