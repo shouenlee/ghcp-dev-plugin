@@ -1,0 +1,11 @@
+{
+  "name": "ghcp-dev-plugin",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OpenCode plugin — skills and agents from the ghcp-dev-plugin marketplace",
+  "main": ".opencode/plugins/ghcp-dev-plugin.js",
+  "exports": {
+    ".": "./.opencode/plugins/ghcp-dev-plugin.js"
+  },
+  "license": "MIT"
+}
